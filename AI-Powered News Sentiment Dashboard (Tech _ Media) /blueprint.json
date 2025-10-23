@@ -1,0 +1,559 @@
+{
+  "name": "AI-Powered News Sentiment Dashboard (Tech / Media)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1296,
+        -32
+      ],
+      "id": "cc5f8664-a15c-45f8-a1d3-627a84a979c8",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "=https://newsapi.org/v2/top-headlines?category=technology&pageSize=20&apiKey=83d0132ee5154def8602aabc01fad6b4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1072,
+        -32
+      ],
+      "id": "519f2713-bd1a-4f54-b8ad-82e2626dd9b1",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "799314ee-e3f4-4657-ab01-8e4b0f8230c0",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "b17df3b4-2d3c-4e07-98ac-3e60cdc2741f",
+              "name": "url",
+              "value": "={{ $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "13163afb-3a17-498f-8edb-c92a1a413810",
+              "name": "source",
+              "value": "={{ $json.source }}",
+              "type": "string"
+            },
+            {
+              "id": "73824d7c-d3b3-47ca-a148-ba7c541eb950",
+              "name": "publishedAt",
+              "value": "={{ $json.publishedAt }}",
+              "type": "string"
+            },
+            {
+              "id": "f2239a36-12a0-48d8-a1b3-bb862da334ff",
+              "name": "content",
+              "value": "={{ $json.content }}",
+              "type": "string"
+            },
+            {
+              "id": "686c6894-4904-46c1-965c-f2cf0b62b211",
+              "name": "excerpt",
+              "value": "={{ $json[\"content\"] ? $json[\"content\"].slice(0,1200) : ($json[\"description\"] || $json[\"title\"]) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -624,
+        -32
+      ],
+      "id": "ffcce504-bd1a-43eb-afad-193b29cc36cb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const articles = $json.articles || [];\n\nreturn articles.map(article => ({\n  json: {\n    title: article.title,\n    author: article.author,\n    description: article.description,\n    url: article.url,\n    urlToImage: article.urlToImage,\n    publishedAt: article.publishedAt,\n    source: article.source?.name || \"Unknown\",\n    content: article.content || \"No content available\"\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -848,
+        -32
+      ],
+      "id": "dd9f2eae-ad38-48ff-94ef-a0ef64933537",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -480,
+        -288
+      ],
+      "id": "56bf614f-07a9-486e-a34e-3a10d85d3cc2",
+      "name": "Loop Over Items",
+      "executeOnce": false
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        -272
+      ],
+      "id": "ba0c79d1-1224-4b98-8b69-f555b71183ec"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        192
+      ],
+      "id": "eafacc4e-b0e7-4104-8b9f-1bc4367d3784",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert news analyst AI. Analyze the following article excerpt and respond ONLY in a valid JSON object.\n\nARTICLE DATA:\nTitle: {{$json[\"title\"]}}\nExcerpt: {{$json[\"excerpt\"]}}\nSource: {{$json[\"source\"]}}\nPublished At: {{$json[\"publishedAt\"]}}\n\nTASKS:\n1. Identify the overall sentiment of the article — positive, negative, or neutral.\n2. Provide a 1-line summary.\n3. Assign a \"relevanceScore\" between 0 and 100 for how relevant this article is to technology trends.\n\nYour response must be strictly valid JSON, using this format:\n\n{\n  \"sentiment\": \"positive | negative | neutral\",\n  \"summary\": \"string\",\n  \"relevanceScore\": number\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        -32
+      ],
+      "id": "478b7232-5cad-446d-9d6d-0025eacde886",
+      "name": "AI Agent - Sentiment Analysis"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse and clean AI Agent JSON responses\n// Each incoming item should have a field like item.output (stringified JSON)\n\nreturn items.map(item => {\n  let raw = item.json.output;\n\n  if (!raw) {\n    return { json: { sentiment: null, summary: null, relevanceScore: null } };\n  }\n\n  try {\n    // 🧹 Clean up formatting issues:\n    // - Remove markdown ```json ``` wrappers\n    // - Remove leading/trailing whitespace\n    // - Remove extra escape characters if any\n    let cleaned = raw\n      .replace(/```json|```/g, '')  // remove markdown fences\n      .replace(/\\\\n/g, '')          // remove literal newlines\n      .replace(/\\\\\"/g, '\"')         // unescape double quotes\n      .trim();\n\n    // 🧩 Parse to JSON\n    const parsed = JSON.parse(cleaned);\n\n    // ✅ Return only clean fields\n    return {\n      json: {\n        sentiment: parsed.sentiment || null,\n        summary: parsed.summary || null,\n        relevanceScore: parsed.relevanceScore || null\n      }\n    };\n\n  } catch (err) {\n    // ❌ If something goes wrong, return nulls\n    return {\n      json: {\n        sentiment: null,\n        summary: null,\n        relevanceScore: null,\n        error: `Parsing failed: ${err.message}`\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -32
+      ],
+      "id": "21ae8c53-c6e9-44e8-8c60-ade2fd2a82dd",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1280,
+        336
+      ],
+      "id": "5dce046f-bfa3-4ac2-a3cb-eba4599e9d37",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "438f1fc2-a729-42a5-93fd-4ed52d9f7918",
+              "leftValue": "={{ $json.relevanceScore }}",
+              "rightValue": 90,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        -1072,
+        336
+      ],
+      "id": "35431eb6-4264-4882-822e-93e0244ade11",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format filtered articles into readable summaries for email or dashboard\nreturn items.map(item => {\n  const data = item.json;\n  const formatted = \n    `📰 *${data.title}*\\n` +\n    `📅 Published: ${data.publishedAt}\\n` +\n    `✍️ Author: ${data.author || \"Unknown\"}\\n` +\n    `💬 Sentiment: ${data.sentiment}\\n` +\n    `⭐ Relevance Score: ${data.relevanceScore}\\n\\n` +\n    `${data.summary}\\n\\n` +\n    `🔗 [Read More](${data.url})\\n` +\n    `-----------------------------------------`;\n\n  return { json: { formatted } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -864,
+        336
+      ],
+      "id": "661b24f3-6ef2-442b-abd5-f9d913ad37e1",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "formatted",
+              "renameField": true,
+              "outputFieldName": "digest"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        336
+      ],
+      "id": "83bfb8c2-1972-4f14-9c35-cee2d2066a5e",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      digest: $json.digest.join('\\n\\n')\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        336
+      ],
+      "id": "967bab9a-c4db-49f6-a2e1-123b9e0f2e23",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an experienced technology journalist writing a professional daily email briefing for tech executives.\n\nWrite a complete HTML email (no plain text, no Markdown, only clean HTML).\n\nThe email should:\n1. Start with a short greeting and one-line intro explaining that this is today’s AI & Tech News Digest.\n2. Include a visually appealing section titled <h2>📰 AI & Tech Daily Digest</h2>.\n3. Summarize the following digest into **3–5 short, impactful news highlights**.\n   - Focus on the most relevant and insightful items.\n   - Each point should be 1–2 sentences, concise and professional.\n4. Use <ul><li>...</li></ul> for the list.\n5. Use <strong> for company or product names, and <em> for emphasis.\n6. Optionally include a one-line “Editor’s Take” paragraph summarizing the general sentiment (positive/negative/neutral tone).\n7. End with a polite closing and small grey footer in <p style=\"font-size:0.85em;color:#777;\"> that says:\n   “Generated automatically by the AI-Powered News Sentiment Dashboard.”\n\nFormatting Rules:\n- Include complete and valid HTML email structure with <html>, <head>, and <body> tags. Use inline CSS for styling. The email should render correctly in Gmail, Outlook, and Apple Mail.\n- Avoid long paragraphs — keep everything scannable and neat.\n- No scripts, tracking pixels, or external CSS.\n- The tone should be professional but friendly — think *Morning Brew* meets *TechCrunch*.\n\nHere’s the raw digest data:\n{{$json[\"digest\"]}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        336
+      ],
+      "id": "9c94aeaf-35a3-456e-a538-75cedab07376",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        528
+      ],
+      "id": "871ed4ac-38c4-4093-ba7f-bb445e9020dc",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let html = $json.html || $json.output || '';\nhtml = html.replace(/^```html\\s*/i, '').replace(/```$/i, '');\nreturn [{ json: { html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        336
+      ],
+      "id": "10e00abb-fbec-439a-8758-2a20143627a6",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "sendTo": "pmaf16e018@outlook.com",
+        "subject": "=AI News Digest – {{ $now }}",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        304,
+        336
+      ],
+      "id": "5a9ae9ee-4eb3-46bc-8a83-28bd9678300e",
+      "name": "Send a message",
+      "webhookId": "c277fa02-ecfd-470b-bac7-4f9c4cc5cb48",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AzK31zUOPtXk3Sre",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Sentiment Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent - Sentiment Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Sentiment Analysis": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "fea2c683-bb72-4040-b0d9-f812c0fdf5fb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f7b993dd14e2f708b427acbff5d0127f9a8bd731f141e235e9561c1d080632e9"
+  },
+  "id": "P7XV1IihkEc9Mne8",
+  "tags": []
+}
