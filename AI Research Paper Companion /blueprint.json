@@ -1,0 +1,1649 @@
+{
+  "name": "AI Research Paper Companion",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an educational content creator who builds clear, memory-friendly flashcards from research summaries.\n\nBased on the input provided, create 5-10 short Q&A flashcards to help students quickly revise the main ideas of the paper.\n\n✅ Guidelines:\n- Keep questions simple but thought-provoking.\n- Each flashcard should have a **Question ID**, **Question**, and a **Short Answer**.\n- Avoid jargon; use plain academic language.\n- Focus on key mechanisms, outcomes, and ideas.\n- Output in JSON array format:\n[\n  {\"questionID\": \"...\", \"question\": \"...\", \"answer\": \"...\", \"IsAnswered\": \"FALSE\"},\n  {\"questionID\": \"...\", \"question\": \"...\", \"answer\": \"...\", \"IsAnswered\": \"FALSE\"}\n]\n\nHere is your input for this task:\n\nTitle: {{ $('Code in JavaScript5').item.json.title }}\n\nPlain-language Summary, Conceptual Explanation, and Key Insights: {{ $json.output }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2848,
+        -1744
+      ],
+      "id": "973c2c00-4d36-493d-8f25-73dec64f25fc",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2848,
+        -1536
+      ],
+      "id": "0266d797-38b0-48a2-a98f-1c322218b8a8",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = JSON.parse($json.output);\n\n// Make sure each flashcard becomes its own item for n8n\nreturn data.map(card => ({ json: card }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2496,
+        -1744
+      ],
+      "id": "430e429b-0d7c-4047-b2ec-d77ab7859096",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc",
+          "mode": "list",
+          "cachedResultName": "QA-Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "QuestionID": "={{ $('Code in JavaScript1').item.json.questionID }}",
+            "QuestionText": "={{ $json.question }}",
+            "CorrectAnswer": "={{ $json.answer }}",
+            "IsAnswered": "={{ $json.IsAnswered }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "QuestionID",
+              "displayName": "QuestionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "QuestionText",
+              "displayName": "QuestionText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CorrectAnswer",
+              "displayName": "CorrectAnswer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IsAnswered",
+              "displayName": "IsAnswered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IsCorrect",
+              "displayName": "IsCorrect",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2288,
+        -1488
+      ],
+      "id": "85f2c666-0d8f-4a49-98d0-d74bdb8095d7",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2b2rH5HTNcal1blR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc",
+          "mode": "list",
+          "cachedResultName": "QA-Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit#gid=0"
+        },
+        "numberToDelete": 15
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -2288,
+        -1744
+      ],
+      "id": "27e08b5f-2c48-456c-82b2-ca4fc7fe7e16",
+      "name": "Delete rows or columns from sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2b2rH5HTNcal1blR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "useDataOfInput": 2
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2464,
+        -1488
+      ],
+      "id": "5c925697-c583-4061-8c60-d707440061a8",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "sendTo": "pmaf16e018@gmail.com",
+        "subject": "=Crux of Research Paper Titled \"{{ $node[\"Code in JavaScript5\"].json[0].Title }}\"",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1264,
+        -1776
+      ],
+      "id": "94bd3453-48ed-4cb3-aaf0-551f85d2e53c",
+      "name": "Send a message",
+      "webhookId": "f2bba82c-5ca9-4d65-a435-6eef3c907bc2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "AzK31zUOPtXk3Sre",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an email assistant generating the full, styled HTML body of a professional email.\n\n**Goal:** Create a clean, HTML email (including <html> and <body> tags) that contains a research paper summary and a visually attractive Call-to-Action (CTA) section with instructions for copying a local file link.\n\n**Instructions for HTML Generation and Styling:**\n1.  Use **basic inline HTML and CSS styles** suitable for wide email client compatibility. Keep the overall aesthetic (fonts, colors, background) from the previous prompt's excellent design.\n2.  Include the entire summary provided in the **SUMMARY** section, using `<p>` tags for structure.\n3.  **Keep the original CTA section's styling,** including the background color, the bold/large heading, and the exciting emojis (✨🚀).\n\n**Crucial Change for the Link:**\n4.  **DO NOT use an `<a href=...>` tag.** The link is local and will not be clickable.\n5.  Instead, replace the clickable link with the following:\n    * A clear instructional sentence: **\"To start the quiz, please copy the URL below and paste it directly into your web browser's address bar.\"**\n    * The raw URL: **`file:///C:/Users/FINE/Desktop/research_chatbot_site.html`**\n    * Style the raw URL (the link text itself) prominently (e.g., using a monospaced font like 'Courier' or a strong, contrasting background color and border) to make it easy for the user to select and copy.\n\n**Data to use for CTA:**\n* **Encouraging Line:** We encourage you to test your knowledge and further explore the research concepts with our interactive bot!\n* **Raw Link URL:** file:///C:/Users/FINE/Desktop/research_chatbot_site.html\n\n**SUMMARY:**\n{{ $json.output }}\n\n**Output Requirement:** The final response must be the complete, valid HTML code from `<html>` to `</html>`, and nothing else.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1840,
+        -1776
+      ],
+      "id": "7e736a51-397d-480f-a6ac-dd2b6325d362",
+      "name": "AI Agent2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1840,
+        -1584
+      ],
+      "id": "6b84c599-c0b0-4106-a8d1-82a627ef630f",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let html = $json.html || $json.output || '';\nhtml = html.replace(/^```html\\s*/i, '').replace(/```$/i, '');\nreturn [{ json: { html } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1488,
+        -1776
+      ],
+      "id": "07d31df3-0e90-46d8-ba28-426d1771eea8",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "20bc1329-1442-41cc-a076-6d3e1ccb4e4a",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "paperFile"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2832,
+        -2224
+      ],
+      "id": "0d29dfda-fd4d-49af-851d-8a8a93ae4380",
+      "name": "manual-submit-paper",
+      "webhookId": "20bc1329-1442-41cc-a076-6d3e1ccb4e4a"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Renames the binary file key from 'paperFile' (from the Webhook) to 'data'.\n// This step prevents the workflow from immediately failing.\n\nconst binaryData = items[0].binary;\n\nif (binaryData && binaryData.paperFile) {\n    // 1. Rename the file key to 'data'\n    binaryData.data = binaryData.paperFile;\n    \n    // 2. Remove the old key 'paperFile' (optional, but good practice)\n    delete binaryData.paperFile;\n}\n\n// Return the item. If the file was present, it is now named 'data'.\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2624,
+        -2224
+      ],
+      "id": "eba78d6d-42a7-4935-bcaa-5f9040a20373",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"success\",\n  \"message\": \"File received and renamed successfully. Processing initiated.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -1040,
+        -1776
+      ],
+      "id": "41858b9d-f4f8-4515-a7e3-37b4c06f1d1d",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You have been provided with a research paper. Analyze the document. First, extract the title and the full abstract. Finally, format your output as a single JSON object.\n\nHere is the research paper: \n{{ $json.paperContent }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -2016,
+        -2224
+      ],
+      "id": "6a9b5dce-cfae-4a1d-a4fe-23fe8bb6ed16",
+      "name": "AI Agent3"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2016,
+        -2048
+      ],
+      "id": "43c7a5d8-f584-4f92-b7a6-7e13ddb86150",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "paperFile0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -2416,
+        -2224
+      ],
+      "id": "00eb19ff-29fa-4946-bea2-1c6f1a1f3fae",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean up text before sending to the AI Agent\nconst extractedText = items[0].json.text;\n\n// 1. Replace all newline characters (\\n and \\r) with a single space.\n// 2. Replace multiple spaces (or tabs) with a single space.\n// 3. Trim leading/trailing whitespace.\nconst cleanedText = extractedText\n    .replace(/(\\r\\n|\\n|\\r)/gm, ' ') \n    .replace(/\\s\\s+/g, ' ')\n    .trim();\n\n// Return the cleaned text under a new key for the AI Agent\nreturn [{\n    json: {\n        paperContent: cleanedText\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2208,
+        -2224
+      ],
+      "id": "e4deec7a-fe79-486c-a3ba-28aaddd4cc0b",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert research communicator who writes clear, accessible summaries of scientific papers.\n\nYour task is to process each paper’s abstract and produce a structured output in three sections:\n\n1️⃣ **Plain-language Summary:**  \nWrite a short and simple summary (4–5 sentences) explaining what this paper is about, avoiding technical jargon.\n\n2️⃣ **Conceptual Explanation (For Students):**  \nExplain the *core idea* or *mechanism* in layman’s terms, as if you’re teaching it to a curious student who knows basic computer science but not deep research.\n\n3️⃣ **Key Insights / Takeaways:**  \nList 3–5 concise bullet points highlighting what’s novel, useful, or impactful about this work.\n\nUse markdown formatting (bold, italics, and bullet points) where helpful for readability. Here is your input:\n\nTitle: {{ $json.Title }}\n\nAbstract:\n{{$json.Abstract}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1424,
+        -2224
+      ],
+      "id": "2c099897-77e9-45c1-9b6c-9a59433d8d7e",
+      "name": "AI Agent4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This node extracts the clean JSON from the AI Agent's markdown-wrapped output.\n\nconst agentOutput = items[0].json.output;\n\n// 1. Clean the output string by removing the surrounding markdown and newline characters.\n// The regex finds and removes '```json\\n' from the start and '\\n```' from the end.\nconst jsonString = agentOutput.replace(/```json\\n|\\n```/g, '').trim();\n\ntry {\n    // 2. Parse the clean string into a JavaScript object.\n    const parsedData = JSON.parse(jsonString);\n\n    // 3. Format the data into the final desired structure (Title and Abstract).\n    return [{\n        json: {\n            Title: parsedData.title,\n            Abstract: parsedData.abstract\n        }\n    }];\n\n} catch (error) {\n    // 4. Handle any parsing errors (e.g., if the AI did not return valid JSON).\n    console.error(\"Failed to parse JSON from AI Agent output:\", error);\n    return [{\n        json: {\n            error: \"JSON Parsing Failed: AI output was improperly formatted.\",\n            rawOutput: agentOutput\n        }\n    }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1664,
+        -2224
+      ],
+      "id": "9b015c19-e665-4f0d-ad3c-6b83bf0ddbac",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1424,
+        -2032
+      ],
+      "id": "eaee910d-937b-49af-9216-5c55283d0926",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "500d3ad5-e654-44bd-a70a-334d696f3691",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -288,
+        -1952
+      ],
+      "id": "eb4717f7-d7d7-4546-a3ac-4778aacb7a83",
+      "name": "Webhook",
+      "webhookId": "500d3ad5-e654-44bd-a70a-334d696f3691"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc",
+          "mode": "list",
+          "cachedResultName": "QA-Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -64,
+        -1952
+      ],
+      "id": "b98d8bfc-cc00-4709-8608-3d328e30db21",
+      "name": "Get Rows",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2b2rH5HTNcal1blR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d9faa2cc-4165-4041-b146-c1652a0b3007",
+              "leftValue": "={{ $('Webhook').item.json.body.user_message.toLowerCase() }}",
+              "rightValue": "start",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        800,
+        -1952
+      ],
+      "id": "33296e6d-cf00-42c8-b9e6-6c33931050bd",
+      "name": "Start/Ongoing - Criteria"
+    },
+    {
+      "parameters": {
+        "jsCode": "// The 'items' array from the previous node (Google Sheets) contains the data.\n// We can directly use the 'items' array for filtering and selecting.\n\n// 1. Filter the questions to find all UNANSWERED ones\nconst unansweredQuestions = items.filter(item => {\n    // Check the IsAnswered column. Sticking to user's existing logic (item.json.IsAnswered === false).\n    return item.json.IsAnswered === false;\n});\n\n// 2. Select the FIRST unanswered question (the next one to be asked)\nif (unansweredQuestions.length > 0) {\n    // Quiz is ONGOING\n\n    // Get the first item\n    const nextQuestionItem = unansweredQuestions[0];\n    \n    // Clone the item to safely modify its JSON content\n    const outputItem = JSON.parse(JSON.stringify(nextQuestionItem));\n    \n    // ADDED: Set the 'Quiz_Completed' key to false\n    outputItem.json.Quiz_Completed = false;\n    \n    // Return ONLY the next question item with the flag.\n    return [outputItem];\n} else {\n    // Quiz is COMPLETE\n\n    // Create a new item to carry the 'Quiz_Completed: true' flag.\n    const outputItem = {\n        json: {\n            // ADDED: Set the 'Quiz_Completed' key to true\n            Quiz_Completed: true\n        }\n    };\n    \n    // NOTE: If your downstream scoring node (Code in JavaScript6) relies on \n    // getting ALL questions in one array when the quiz is complete, you must \n    // also add that nested array here, like:\n    // all_questions: items.map(i => i.json) \n    \n    // Return the single item containing the completion flag\n    return [outputItem];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -1952
+      ],
+      "id": "5df5fc42-6fb3-42c9-84ea-769a2c21f7e3",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The next question to ask is: {{ $('Code in JavaScript').item.json.QuestionText }}",
+        "options": {
+          "systemMessage": "You are the friendly Quiz Master for the ResearchBot. Your task is to welcome the user, introduce the quiz, and present the first question.\nYou MUST output only the greeting, the quiz introduction, and the question text. Do NOT provide the answer."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        -2480
+      ],
+      "id": "fdf4a373-bee6-4f6c-8b90-10691e79c8b4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -304,
+        -2304
+      ],
+      "id": "b36a849f-cc4d-4e20-9e25-7b5da7ccd77e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc",
+          "mode": "list",
+          "cachedResultName": "QA-Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "IsAnswered": "True",
+            "IsCorrect": "={{ $json.is_correct }}",
+            "QuestionID": "={{ $('Code in JavaScript').item.json.QuestionID }}"
+          },
+          "matchingColumns": [
+            "QuestionID"
+          ],
+          "schema": [
+            {
+              "id": "QuestionID",
+              "displayName": "QuestionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "QuestionText",
+              "displayName": "QuestionText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CorrectAnswer",
+              "displayName": "CorrectAnswer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IsAnswered",
+              "displayName": "IsAnswered",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IsCorrect",
+              "displayName": "IsCorrect",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UserAnswer",
+              "displayName": "UserAnswer",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        -1552
+      ],
+      "id": "ec6f2734-8cc8-4787-8c63-3476422d9865",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2b2rH5HTNcal1blR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc",
+          "mode": "list",
+          "cachedResultName": "QA-Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14DJFHnM7zBgecgeDv-r4gQ1Xm3glIJnf8Y0RVv5Ovwc/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        896,
+        -1552
+      ],
+      "id": "96644013-9f18-47d5-8ae0-d79af5accaed",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "2b2rH5HTNcal1blR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        -1216
+      ],
+      "id": "8ba9072c-e019-49c3-a1fe-45db27327dd9",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "539c2e7e-1f86-419e-a930-f87d8188b7d1",
+              "name": "FullResponse",
+              "value": "={{ $json.message + \"\\n\\n\" + \"Here is your next question:\" + \"\\n\" + $json.QuestionText }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -1216
+      ],
+      "id": "293c6937-0dc8-4102-9d71-33bde67d9a1a",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"response\": \"{{ $json.escaped_output }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1360,
+        -1216
+      ],
+      "id": "d58e2d20-da13-4c84-8623-b25289621977",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"response\": \"{{ $json.escaped_output }}\",\n  \"quiz_finished\": {{ $json.quiz_finished }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2208,
+        -1568
+      ],
+      "id": "fbc91f0c-c7f5-4986-95af-251c6111c0cd",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d07a3b54-fee8-44cd-992b-eacaa863f883",
+              "leftValue": "={{ $json.quiz_complete }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1312,
+        -1552
+      ],
+      "id": "29931f90-7988-4ca5-9f5b-d073d67899d9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node (Calculate Score) - FINAL FIX\n\n// Get the full question list from the nested property 'all_rows'\nconst allQuestions = items[0].json.all_rows; \n\n// Defensive check in case of unexpected data flow\nif (!Array.isArray(allQuestions)) {\n    return [{\n        json: {\n            total_questions: 0,\n            correct_answers: 0,\n            score_percentage: 0\n        }\n    }];\n}\n\n// Count total questions and correct answers\nconst total = allQuestions.length;\n\n// Filter for correct answers, checking for string ('TRUE'/'True') and boolean (true) values\nconst correct = allQuestions.filter(q => {\n    // Check if the answer was marked as correct, covering all common sheet data types\n    const isCorrect = q.IsCorrect === true || q.IsCorrect === 'TRUE' || q.IsCorrect === 'True';\n    return isCorrect;\n}).length;\n\n// Calculate percentage\nconst percentage = total > 0 ? Math.round((correct / total) * 100) : 0;\n\n// Return the final score data structure\nreturn [{\n    json: {\n        total_questions: total,\n        correct_answers: correct,\n        score_percentage: percentage\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1728,
+        -1568
+      ],
+      "id": "c65b338f-408e-4493-a7a5-f4ff5fb1e55b",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "content": "## FIRST MESSAGE\nThis branch deals with the first message initiated by the word \"Start.\"",
+        "height": 432,
+        "width": 1376
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -2608
+      ],
+      "id": "669f2c28-23cb-49fd-9ca3-3b24d3a00936",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## **STARTING POINT** \n",
+        "height": 432,
+        "width": 1360,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -2160
+      ],
+      "id": "b7ade985-d010-4a89-ad3b-88e8cd92c991",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Auto-Grader/Navigator Branch\nThis branch automatically grades and decides whether to continue to next messages of generate final report. ",
+        "height": 592,
+        "width": 1968,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        -1664
+      ],
+      "id": "c40afaf9-6b77-413f-bfd8-7d27212cb7c9",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Final Report Generation\nThis branch is responsible for the generation of result. ",
+        "height": 336,
+        "width": 768,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        -1664
+      ],
+      "id": "005044fd-9c84-430d-9d38-5c45d691eb1d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d1542d08-49ff-4878-b9d3-37490301ef9a",
+              "leftValue": "={{ $json.Quiz_Completed }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        384,
+        -1952
+      ],
+      "id": "96b203e9-808b-4298-84e7-bcfd9979caf2",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"response\": \"All questions have been answered! We appreciate you trying our chatbot. Please contact the administrator if you need the quiz reset for another attempt.\",\n  \"quiz_finished\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        400,
+        -2112
+      ],
+      "id": "0d03159e-dbd9-41d2-b41c-2de7d0b0161f",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        640,
+        -1952
+      ],
+      "id": "2532d017-ac7f-419b-aa89-ca3286fd2183",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"response\": \"{{ $json.escaped_output }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        800,
+        -2480
+      ],
+      "id": "affc48a1-1b3f-41d3-9b79-1c8ef1a8fd97",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Assuming the AI response is in the 'output' property\nconst aiResponse = items[0].json.output;\n\n// Use a regular expression to replace all unescaped newlines (\\n) with a double-escaped version (\\\\n)\nconst escapedResponse = aiResponse.replace(/\\n/g, '\\\\n');\n\n// Return the modified data for the Webhook Response node\nitems[0].json.escaped_output = escapedResponse;\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        -2480
+      ],
+      "id": "93f69d5f-6fec-49b6-b6b6-b2344bfe4ea3",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The question was: {{ $json.QuestionText }}\nThe correct answer is: {{ $json.CorrectAnswer }}\nThe user's submitted answer is: {{ $node[\"Webhook\"].json.body.user_message }}",
+        "options": {
+          "systemMessage": "You are a strict technical quiz grader. You must compare the User's Answer against the Correct Answer.\n\nIf the User's Answer is substantively correct (even if worded differently), set is_correct to TRUE and provide a brief, positive reinforcement message.\nIf the User's Answer is incorrect, set is_correct to FALSE and provide a brief, helpful explanation of the correct topic.\n\nYou MUST output ONLY a JSON object with the following structure:\n{\"is_correct\": [TRUE/FALSE], \"message\": \"[Your feedback message]\"}\n\nDO NOT output any text outside of the JSON block."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        -1552
+      ],
+      "id": "448a142b-6b59-4269-8c2e-a2cfd306a221",
+      "name": "AI Agent5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -304,
+        -1360
+      ],
+      "id": "143c3166-7acc-4855-a1b0-aba24010d6f6",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "tw26oV4gggsH9mTV",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return only is_correct and message from the parsed output\nreturn $input.all().map(item => {\n  const parsedData = JSON.parse(item.json.output);\n  return {\n    json: {\n      is_correct: parsedData.is_correct,\n      message: parsedData.message\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        -1552
+      ],
+      "id": "8984eefa-3cb9-4c0d-8fab-6ee814a679d8",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        48,
+        -1232
+      ],
+      "id": "b641e7ba-9d5d-44be-a46b-e08b6d8081ed",
+      "name": "Merge3"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Function Node (Find Next Question) - FINAL FIX\n\n// Get all question objects from the multiple incoming items\nconst allQuestions = items.map(item => item.json);\n\n// Find the first question where 'IsAnswered' is NOT TRUE\nconst nextUnansweredQuestion = allQuestions.find(q => \n    q.IsAnswered !== true && q.IsAnswered !== 'TRUE'\n);\n\nif (nextUnansweredQuestion) {\n    // Case 1: Quiz Ongoing (False Branch)\n    // Return ONLY ONE ITEM with the next question and the flag quiz_complete: false.\n    return [{ \n        json: {\n            ...nextUnansweredQuestion,\n            quiz_complete: false\n        }\n    }];\n} else {\n    // Case 2: Quiz Complete (True Branch)\n    // IMPORTANT: Return ONLY ONE ITEM. \n    // This item contains the quiz_complete: true flag AND the full question data.\n    return [{ \n        json: { \n            quiz_complete: true,\n            // Nest the entire array of question objects for the scoring node\n            all_rows: allQuestions \n        }\n    }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        -1552
+      ],
+      "id": "e2e26689-d266-43e9-86ff-95bbf7d5f00e",
+      "name": "Code in JavaScript9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the complete response text from the previous Set node\nconst fullResponse = items[0].json.FullResponse;\n\n// Replace unescaped newlines (\\n) with a double-escaped version (\\\\n) for safe JSON transmission\nconst escapedResponse = fullResponse.replace(/\\n/g, '\\\\n');\n\n// Set the escaped response into a new property for the Webhook Response node\nitems[0].json.escaped_output = escapedResponse;\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        -1216
+      ],
+      "id": "642920b3-5456-4ece-93f4-e9607bee2bd8",
+      "name": "Code in JavaScript10"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Updated final message node (after the score calculation)\n\n// 1. Get the score data from the input item\nconst score = items[0].json;\n\n// 2. Construct the final message with clean newlines (\\n)\nconst finalMessage = `Quiz Complete! ✅ You have finished all the questions.\\n\\nYour final score is: ${score.correct_answers} out of ${score.total_questions}.\\n\\nThank you for taking the ResearchBot Quiz! 🎯`;\n\n// 3. Escape the newlines for safe JSON transmission\n// Replace unescaped newlines (\\n) with a double-escaped version (\\\\n)\nconst escapedResponse = finalMessage.replace(/\\n/g, '\\\\n');\n\n// 4. Return the final, escaped message\nreturn [{ \n    json: {\n        escaped_output: escapedResponse,\n        quiz_finished: true\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        -1568
+      ],
+      "id": "95650d0c-b476-4b3c-9abe-52d3feb4779f",
+      "name": "Code in JavaScript11"
+    },
+    {
+      "parameters": {
+        "content": "## KNOWLEDGE EXTRACTOR\nThis is where the data ingestion and information extraction is done. ",
+        "height": 480,
+        "width": 1904
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        -2368
+      ],
+      "id": "530c3376-8400-413a-9b4c-0d956af23de6",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Digest Preparation\nFinall insights and link to quiz is sent via email. ",
+        "height": 432,
+        "width": 1200,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        -1856
+      ],
+      "id": "2dcaf8cc-456f-4ea5-b3d0-28e91a022de6",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## QUIZ MAKER\nThis is where the question answer bank is created and stored in Google Sheets for the chatbot to ask. ",
+        "height": 576,
+        "width": 912
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2960,
+        -1856
+      ],
+      "id": "9d851101-fc12-4131-86b8-7d43411c51f9",
+      "name": "Sticky Note6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Delete rows or columns from sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Delete rows or columns from sheet": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "manual-submit-paper": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent4": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent4",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Rows",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get Rows": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start/Ongoing - Criteria": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Start/Ongoing - Criteria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent5",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge3",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge3": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript9": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript10": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript11": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a3955989-f95a-4fb3-b8f0-8c4cc1c2d09b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f7b993dd14e2f708b427acbff5d0127f9a8bd731f141e235e9561c1d080632e9"
+  },
+  "id": "WDviiS57U7Vko5CR",
+  "tags": []
+}
