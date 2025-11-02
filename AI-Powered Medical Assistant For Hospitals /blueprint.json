@@ -1,0 +1,1877 @@
+{
+  "name": "AI-Powered Medical Assistant For Hospitals",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Medical Symptom Assessment Form",
+        "formDescription": "Please provide your symptoms and medical information. This is for educational purposes only and does not replace professional medical advice.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Full Name",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Age",
+              "fieldType": "number",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Gender",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Male"
+                  },
+                  {
+                    "option": "Female"
+                  },
+                  {
+                    "option": "Other"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Symptoms",
+              "fieldType": "textarea",
+              "placeholder": "Describe your symptoms in detail",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Duration of Symptoms",
+              "placeholder": "e.g., 3 days, 1 week",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Known Conditions or Medications",
+              "fieldType": "textarea",
+              "placeholder": "List any existing medical conditions or medications (or write none)",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Your Email Address",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Contact No.",
+              "placeholder": "Enter your contact number here",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "buttonLabel": "Submit Assessment",
+          "path": "medical-symptom-form"
+        }
+      },
+      "id": "f09dd5cd-9647-4cc8-9407-f4f388f367e7",
+      "name": "Patient Symptom Form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        -6480,
+        160
+      ],
+      "webhookId": "e9e494da-12a3-4441-8093-b82bfb119d0d"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "doctorEmail",
+              "value": "pmaf16e018@gmail.com",
+              "type": "string"
+            },
+            {
+              "id": "id-2",
+              "name": "spreadsheetId",
+              "value": "1SfWowGDLMQmmKulediMI_-vrvVOKJYrDr-zAVKw42ak",
+              "type": "string"
+            },
+            {
+              "id": "id-3",
+              "name": "sheetName",
+              "value": "Medical Cases",
+              "type": "string"
+            },
+            {
+              "id": "56934827-3a0b-42af-a6ee-b858d56ae0d1",
+              "name": "doctorContact",
+              "value": "+923137108490",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "c3ef36a5-652a-4c72-9dee-4f2a7261e27f",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -6256,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validate all required fields from the form submission\nconst items = $input.all();\nconst validatedItems = [];\n\nfor (const item of items) {\n  const data = item.json;\n\n  // Map incoming form keys to internal keys\n  const mappedData = {\n    name: data[\"Full Name\"],\n    age: data[\"Age\"],\n    gender: data[\"Gender\"],\n    symptoms: data[\"Symptoms\"],\n    duration: data[\"Duration of Symptoms\"],\n    conditions: data[\"Known Conditions or Medications\"],\n    email: data[\"Your Email Address\"],\n    contact: data[\"Contact No.\"]\n  };\n\n  // Define required fields\n  const requiredFields = [\n    { name: 'name', label: 'Patient Name' },\n    { name: 'age', label: 'Age' },\n    { name: 'gender', label: 'Gender' },\n    { name: 'symptoms', label: 'Symptoms' },\n    { name: 'duration', label: 'Duration' },\n    { name: 'conditions', label: 'Pre-existing Conditions' },\n    { name: 'email', label: 'Email' },\n    { name: 'contact', label: 'Contact No.' }\n  ];\n\n  // Check for missing or empty fields\n  const missingFields = [];\n  for (const field of requiredFields) {\n    const value = mappedData[field.name];\n    if (!value || (typeof value === 'string' && value.trim() === '')) {\n      missingFields.push(field.label);\n    }\n  }\n\n  if (missingFields.length > 0) {\n    throw new Error(\n      `Missing required fields: ${missingFields.join(', ')}. Please fill in all required information.`\n    );\n  }\n\n  // Clean and format the data\n  const cleanedData = {\n    name: mappedData.name.trim(),\n    age: parseInt(mappedData.age),\n    gender: mappedData.gender.trim(),\n    symptoms: mappedData.symptoms.trim(),\n    duration: mappedData.duration.trim(),\n    conditions: mappedData.conditions.trim(),\n    email: mappedData.email.trim().toLowerCase(),\n    contact: mappedData.contact.trim(),\n    submittedAt: new Date().toISOString()\n  };\n\n  // Basic email validation\n  const emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n  if (!emailRegex.test(cleanedData.email)) {\n    throw new Error('Invalid email address format. Please provide a valid email.');\n  }\n\n  // Basic Pakistani contact number validation (+923XXXXXXXXX)\n  const contactRegex = /^\\+923\\d{9}$/;\n  if (!contactRegex.test(cleanedData.contact)) {\n    throw new Error(\n      'Invalid contact number format. Please provide a valid number in the format +923XXXXXXXXX.'\n    );\n  }\n\n  // Age validation\n  if (isNaN(cleanedData.age) || cleanedData.age < 0 || cleanedData.age > 150) {\n    throw new Error('Invalid age. Please provide a valid age between 0 and 150.');\n  }\n\n  validatedItems.push({ json: cleanedData });\n}\n\nreturn validatedItems;\n"
+      },
+      "id": "c074987c-ac45-4ed7-9745-52314d205ec7",
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6032,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Workflow Configuration').first().json.doctorEmail }}",
+        "subject": "={{ $json['doctor\\'s email\\'s subject'] }}",
+        "message": "={{ $json['doctor\\'s email\\'s body'] }}",
+        "options": {}
+      },
+      "id": "da725502-c5e1-4a4b-a7d4-44bec541c135",
+      "name": "Send Email to Doctor",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -5136,
+        928
+      ],
+      "webhookId": "9ccc4949-5c0b-4326-be0f-e9c5393f3452",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bX38WHV9EnpRlQmf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Workflow Configuration').item.json['Your Email Address'] }}",
+        "subject": "={{ $json['patient\\'s email\\'s subject'] }}",
+        "message": "={{ $json['patient\\'s email\\'s body'] }}",
+        "options": {}
+      },
+      "id": "95195bd0-5268-4111-9b39-f0d6591119ba",
+      "name": "Send Email to Patient",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -5136,
+        1120
+      ],
+      "webhookId": "24767405-9a43-4e38-8754-a143ac006131",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bX38WHV9EnpRlQmf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -6512,
+        1008
+      ],
+      "id": "d1a6ce3b-2a02-468e-b6c8-88c660c52d5e",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "NHDNVlUj19F93gBn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -5712,
+        1200
+      ],
+      "id": "a625f26c-2149-4748-b2cb-345e4f99134d",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "NHDNVlUj19F93gBn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=The details of patient are:\n- Patient Name: {{ $('Validate Input').item.json.name }}\n- Age: {{ $('Validate Input').item.json.age }}\n- Gender: {{ $('Validate Input').item.json.gender }}\n- Symptoms: {{ $('Validate Input').item.json.symptoms }}\n- Duration: {{ $('Validate Input').item.json.duration }}\n- Conditions: {{ $('Validate Input').item.json.conditions }}\n- Timestamp: {{ $('Validate Input').item.json.submittedAt }}",
+        "options": {
+          "systemMessage": "You are a medical triage AI assistant designed to analyze patient-submitted symptoms and generate a structured preliminary health assessment. Your role is to help doctors by organizing and summarizing the patient’s condition — not to replace professional diagnosis.\n\nInput fields may include:\nFull Name, Age, Gender, Symptoms, Duration of Symptoms, Known Conditions or Medications, and optionally submittedAt.\n\nYour goal:\nBased on the symptoms and information provided, generate a preliminary, structured assessment that includes:\n\nLikely conditions or possible diagnoses (top 3 most probable).\n\nShort reasoning for each possible diagnosis.\n\nUrgency level (Moderate or Mild).\n\nBrief general advice or next step (e.g., “Consult a doctor if symptoms persist,” or “Visit ER if condition worsens”).\n\nA clear, strong disclaimer that this is not a confirmed diagnosis.\n\nOutput Format\n\nReturn only one valid JSON object, with the following structure:\n\n{\n  \"possible_diagnoses\": [\n    {\n      \"name\": \"Diagnosis 1\",\n      \"reason\": \"Short reasoning for why this diagnosis fits the symptoms.\"\n    },\n    {\n      \"name\": \"Diagnosis 2\",\n      \"reason\": \"Another possible explanation based on reported symptoms.\"\n    }\n  ],\n  \"urgency\": \"Low | Moderate | High\",\n  \"advice\": \"Concise general advice for the patient, phrased responsibly.\",\n  \"disclaimer\": \"⚠️ This is a preliminary AI-generated assessment and does not replace professional medical advice. Please consult a licensed healthcare provider for an accurate diagnosis.\"\n}\n\nGuidelines\n\nTone: Neutral, professional, and empathetic.\n\nClarity: Write in simple, non-technical language understandable to patients.\n\nSafety: Never include prescriptions, drug names, doses, or treatment instructions.\n\nBoundaries: Do not confirm or reject a diagnosis; express likelihoods (e.g., “Possible,” “May indicate,” “Could be consistent with”).\n\nNo external data: Use only the input provided.\n\nLength: Keep explanations short (1–2 sentences per reason).\n\nFinal instruction:\n\nReturn only the JSON object — no extra text, no markdown, no commentary."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -6512,
+        832
+      ],
+      "id": "19037039-5924-4ffe-b919-542bc3ac3787",
+      "name": "Diagnostician"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -5712,
+        832
+      ],
+      "id": "750ec361-3d47-421d-9dbf-0892794214fb",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "NHDNVlUj19F93gBn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -5824,
+        400
+      ],
+      "id": "48d6dd1e-c4c9-4d08-ab15-669ff7e8f2d9",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "NHDNVlUj19F93gBn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -6512,
+        -432
+      ],
+      "id": "466e2dcf-95c2-45a6-bdc2-548b0c028812",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "NHDNVlUj19F93gBn",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Parse the stringified JSON inside 'output'\n  let parsed;\n  try {\n    parsed = JSON.parse(item.json.output);\n  } catch (error) {\n    throw new Error('Invalid JSON string in \"output\" field.');\n  }\n\n  // Create an object to hold all keys and their corresponding values\n  const extracted = {};\n\n  // Extract top-level keys and values\n  for (const [key, value] of Object.entries(parsed)) {\n    if (key !== \"possible_diagnoses\") {\n      extracted[key] = value;\n    }\n  }\n\n  // Handle nested keys inside 'possible_diagnoses' array (if exists)\n  if (Array.isArray(parsed.possible_diagnoses)) {\n    parsed.possible_diagnoses.forEach((diag, index) => {\n      for (const [subKey, subValue] of Object.entries(diag)) {\n        extracted[`possible_diagnoses_${index + 1}_${subKey}`] = subValue;\n      }\n    });\n  }\n\n  results.push({ json: extracted });\n}\n\n// Return result as JSON\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6160,
+        -624
+      ],
+      "id": "8d90edc1-5ef0-4b1b-9e64-2d41c257b42d",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here are the details of patient:\n- Age: {{ $json.age }}\n- Gender: {{ $json.gender }}\n- Symptoms: {{ $json.symptoms }}\n- Duration: {{ $json.duration }}\n- Conditions (if any): {{ $json.conditions }}\n- Email: {{ $json.email }}\n- Mobile No: \n- Submitted At: {{ $json.submittedAt }}",
+        "options": {
+          "systemMessage": "You are a responsible AI medical triage assistant integrated into an automated workflow. \nYour purpose is NOT to diagnose diseases but to classify how URGENT the user's reported symptoms appear to be, \nso that medical staff can prioritize critical cases immediately. \n\n---\n\n### YOUR TASK\nRead the patient’s symptoms and output one of the following urgency levels:\n1. \"critical\" — Possible life-threatening or emergency symptoms such as:\n   - Severe chest pain or tightness (possible cardiac issue)\n   - Difficulty breathing or shortness of breath\n   - Severe bleeding, head trauma, or seizures\n   - Fainting, confusion, or loss of consciousness\n   - Sudden weakness, slurred speech, or paralysis\n   - Persistent vomiting or extreme dehydration\n\n2. \"moderate\" — Symptoms that are concerning but not immediately life-threatening.\n   Example: persistent fever, fatigue, cough, abdominal pain, dizziness, etc.\n\n3. \"mild\" — Symptoms that are likely routine or low-risk, such as mild sore throat, seasonal cold, headache, or tiredness.\n\n---\n\n### OUTPUT FORMAT\nRespond ONLY in the following strict JSON format:\n\n{\n  \"urgency_level\": \"\", \n  \"reason\": \"\", \n  \"recommended_action\": \"\"\n}\n\n---\n\n### OUTPUT RULES\n- \"urgency_level\" must be one of: \"critical\", \"moderate\", or \"mild\".\n- \"reason\" should be a short summary (1–2 sentences) explaining why the case fits that level.\n- \"recommended_action\" should give clear next steps:\n   • For \"critical\" → tell the user to call emergency services (e.g., 112) or go to a hospital immediately.\n   • For \"moderate\" → advise prompt medical review (e.g., by a doctor within 24–48 hours).\n   • For \"mild\" → suggest rest, fluids, or standard self-care with monitoring.\n\n---\n\n### EXAMPLES\n\n**Example 1:**\nInput: \"Severe chest pain, sweating, and dizziness\"\nOutput:\n{\n  \"urgency_level\": \"critical\",\n  \"reason\": \"Symptoms may indicate cardiac distress or heart attack.\",\n  \"recommended_action\": \"Call emergency services (112) or go to the nearest hospital immediately.\"\n}\n\n**Example 2:**\nInput: \"Persistent fever and sore throat for three days\"\nOutput:\n{\n  \"urgency_level\": \"moderate\",\n  \"reason\": \"Symptoms are consistent with an infection that requires doctor evaluation soon.\",\n  \"recommended_action\": \"Schedule a medical consultation within the next 24–48 hours.\"\n}\n\n**Example 3:**\nInput: \"Mild headache and fatigue after long work hours\"\nOutput:\n{\n  \"urgency_level\": \"mild\",\n  \"reason\": \"Symptoms likely indicate minor fatigue or stress-related discomfort.\",\n  \"recommended_action\": \"Rest, hydrate, and monitor for any worsening symptoms.\"\n}\n\n---\n\n⚠️ ETHICAL INSTRUCTION\nYou must never provide a diagnosis, medication, or medical opinion. \nYou only classify urgency based on the described symptoms and advise the patient appropriately.\nAlways err on the side of caution — if uncertain between categories, choose the higher urgency level."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -5824,
+        160
+      ],
+      "id": "637516e0-0596-4f93-b6d2-677659e44fba",
+      "name": "Urgency Determination"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Parse the stringified JSON inside 'output'\n  let parsed;\n  try {\n    parsed = JSON.parse(item.json.output);\n  } catch (error) {\n    throw new Error('Invalid JSON string in \"output\" field.');\n  }\n\n  // Create an object to hold all keys and their corresponding values\n  const extracted = {};\n\n  // Extract top-level keys and values\n  for (const [key, value] of Object.entries(parsed)) {\n    if (key !== \"possible_diagnoses\") {\n      extracted[key] = value;\n    }\n  }\n\n  // Handle nested keys inside 'possible_diagnoses' array (if exists)\n  if (Array.isArray(parsed.possible_diagnoses)) {\n    parsed.possible_diagnoses.forEach((diag, index) => {\n      for (const [subKey, subValue] of Object.entries(diag)) {\n        extracted[`possible_diagnoses_${index + 1}_${subKey}`] = subValue;\n      }\n    });\n  }\n\n  results.push({ json: extracted });\n}\n\n// Return result as JSON\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5472,
+        160
+      ],
+      "id": "8db59114-3f99-4630-a7f0-b1c05b7bae2f",
+      "name": "Parse Response of UD"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6f8b13a8-c633-4deb-b04c-2ad9800de705",
+              "leftValue": "={{ $json.urgency_level }}",
+              "rightValue": "critical",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5168,
+        160
+      ],
+      "id": "235e92d7-e486-4f56-8445-cb34856a598d",
+      "name": "Branching Based on Urgency"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Parse the stringified JSON inside 'output'\n  let parsed;\n  try {\n    parsed = JSON.parse(item.json.output);\n  } catch (error) {\n    throw new Error('Invalid JSON string in \"output\" field.');\n  }\n\n  // Create an object to hold all keys and their corresponding values\n  const extracted = {};\n\n  // Extract top-level keys and values\n  for (const [key, value] of Object.entries(parsed)) {\n    if (key !== \"possible_diagnoses\") {\n      extracted[key] = value;\n    }\n  }\n\n  // Handle nested keys inside 'possible_diagnoses' array (if exists)\n  if (Array.isArray(parsed.possible_diagnoses)) {\n    parsed.possible_diagnoses.forEach((diag, index) => {\n      for (const [subKey, subValue] of Object.entries(diag)) {\n        extracted[`possible_diagnoses_${index + 1}_${subKey}`] = subValue;\n      }\n    });\n  }\n\n  results.push({ json: extracted });\n}\n\n// Return result as JSON\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -6160,
+        832
+      ],
+      "id": "9325085d-dc41-4b33-9c55-db06d6b42060",
+      "name": "Parse Response of Diagnostician"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is your input:\n\n- Possible Diagnosis: \n\n(1) (i) Possible Diagnoses-1: {{ $json.possible_diagnoses_1_name }}\n    (ii) Possible Diagnoses-1's Reason: {{ $json.possible_diagnoses_1_reason }} \n\n(2) (i) Possible Diagnoses-2: {{ $json.possible_diagnoses_2_name }}\n    (ii) Possible Diagnoses-2's Reason: {{ $json.possible_diagnoses_2_reason }}\n\n(3) (i) Possible Diagnoses-3: {{ $json.possible_diagnoses_3_name }}\n    (ii) Possible Diagnoses-3's Reason: {{ $json.possible_diagnoses_3_reason }}",
+        "options": {
+          "systemMessage": "You are a medical summarization AI.\nYour task is to read the structured diagnostic output containing a list of possible diagnoses, each with a brief reasoning, and generate a single, short paragraph summarizing them in natural language.\n\nInstructions\n\nInput format will contain:\n\npossible_diagnoses: an array of objects, each with \"name\" and \"reason\".\nIgnore all other fields (urgency, advice, disclaimer, etc.).\n\nGoal:\nWrite one coherent paragraph that:\n\nMentions all diagnoses by name.\n\nBriefly integrates each diagnosis’s reasoning in a smooth, readable way.\n\nDoes not add new conditions, speculations, or extra advice.\n\nEnds with a short, polite disclaimer like:\n“This is a preliminary AI-generated assessment for review by a medical professional.”\n\nTone and style:\n\nProfessional, clear, and neutral — like a short case summary.\n\nUse cautious language such as “may indicate,” “could be consistent with,” “might suggest.”\n\nAvoid repeating “The patient” in every sentence; make it flow naturally.\n\nAvoid bullet points or lists — output must be one continuous paragraph.\n\nLength:\n\nKeep between 60 and 100 words.\n\nNo extra headers or formatting — plain text only.\n\nOutput format:\n\nReturn only the paragraph text, no JSON, no labels, no markdown.\n\n✅ Example (for reference only — do not output this example):\n\nThe symptoms may indicate a viral upper respiratory infection, given the presence of fever, dry cough, and sore throat. Another possibility is influenza, which could explain the fatigue and body aches. A less likely but potential cause is seasonal allergy-related inflammation, considering the throat irritation and mild cough. This is a preliminary AI-generated assessment for review by a medical professional."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -5712,
+        640
+      ],
+      "id": "3bd73a08-fbb4-4e47-89e7-e16e1605f7e6",
+      "name": "Summary of Diagnoses"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all input items\nconst items = $input.all();\nconst results = [];\n\nfor (const item of items) {\n  // Parse the stringified JSON inside 'output'\n  let parsed;\n  try {\n    parsed = JSON.parse(item.json.output);\n  } catch (error) {\n    throw new Error('Invalid JSON string in \"output\" field.');\n  }\n\n  // Create an object to hold all keys and their corresponding values\n  const extracted = {};\n\n  // Extract top-level keys and values\n  for (const [key, value] of Object.entries(parsed)) {\n    if (key !== \"possible_diagnoses\") {\n      extracted[key] = value;\n    }\n  }\n\n  // Handle nested keys inside 'possible_diagnoses' array (if exists)\n  if (Array.isArray(parsed.possible_diagnoses)) {\n    parsed.possible_diagnoses.forEach((diag, index) => {\n      for (const [subKey, subValue] of Object.entries(diag)) {\n        extracted[`possible_diagnoses_${index + 1}_${subKey}`] = subValue;\n      }\n    });\n  }\n\n  results.push({ json: extracted });\n}\n\n// Return result as JSON\nreturn results;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -5360,
+        1024
+      ],
+      "id": "63412f5a-d3c0-4fd7-952f-bf2a5d1be93d",
+      "name": "Parse Response of Email Composer"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is your input for composing emails for doctor and patient:\n- Patient's Name: {{ $('Workflow Configuration').item.json['Full Name'] }}\n\n- Patient's Email: {{ $('Validate Input').item.json.email }}\n\n- Patient's Contact No: {{ $('Validate Input').item.json.contact }}\n\n- Possible Diagnosis: \n\n(1) (i) Possible Diagnoses-1: {{ $json.possible_diagnoses_1_name }}\n    (ii) Possible Diagnoses-1's Reason: {{ $json.possible_diagnoses_1_reason }} \n\n(2) (i) Possible Diagnoses-2: {{ $json.possible_diagnoses_2_name }}\n    (ii) Possible Diagnoses-2's Reason: {{ $json.possible_diagnoses_2_reason }}\n\n(3) (i) Possible Diagnoses-3: {{ $json.possible_diagnoses_3_name }}\n    (ii) Possible Diagnoses-3's Reason: {{ $json.possible_diagnoses_3_reason }}\n\n- Urgency: {{ $json.urgency }}\n- Advice: {{ $json.advice }}",
+        "options": {
+          "systemMessage": "You are an AI email composer for a medical assistant workflow. \nYour task is to fill in the following predefined HTML email templates for a doctor and a patient. \n\n⚠️ STRICT RULES:\n- You MUST NOT change, remove, or restyle any HTML, CSS, or structural elements. \n- You MUST only fill in the placeholders shown as {{VARIABLES}}.\n- You MUST output a single JSON object in this exact format:\n\n{\n  \"doctor's email's subject\": \"\",\n  \"doctor's email's body\": \"<!DOCTYPE html>...</html>\",\n  \"patient's email's subject\": \"\",\n  \"patient's email's body\": \"<!DOCTYPE html>...</html>\"\n}\n\nYou are NOT allowed to add new tags, emojis, or formatting beyond the templates below.\nOnly replace placeholders inside {{...}} with natural, concise language.\n\n---\n\n### DOCTOR EMAIL TEMPLATE\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>{{doctor_subject}}</title>\n<style>\nbody {font-family: Arial, sans-serif; background-color: #f3f7fb; color: #1a1a1a; padding: 24px;}\nh1,h2 {color: #1f4b99;}\ntable {border-collapse: collapse; width: 100%; margin-top: 10px;}\nth, td {border: 1px solid #ccd6eb; padding: 8px; text-align: left;}\nth {background-color: #eaf0fa;}\n.section {margin-bottom: 20px; padding: 15px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}\n.urgency {font-weight: bold; color: #cc7a00;}\nfooter {font-size: 0.9em; color: #444; margin-top: 30px;}\n</style>\n</head>\n<body>\n<h1>AI Preliminary Medical Assessment for {{patient_name}} 🙂</h1>\n<div class=\"section\">\n<h2>Patient Details</h2>\n<table>\n<tr><th>Name</th><td>{{patient_name}}</td></tr>\n<tr><th>Email</th><td>{{patient_email}}</td></tr>\n</table>\n</div>\n<div class=\"section\">\n<h2>AI Assessment Details</h2>\n<p>{{diagnosis_summary}}</p>\n<p class=\"urgency\">Urgency Level: {{urgency}}</p>\n<p><strong>Advice:</strong> {{advice}}</p>\n</div>\n<footer>⚠️ {{disclaimer}}</footer>\n</body>\n</html>\n\n---\n\n### PATIENT EMAIL TEMPLATE\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>{{patient_subject}}</title>\n<style>\nbody {font-family: Arial, sans-serif; background-color: #f4faf5; color: #1b1b1b; padding: 24px;}\nh1 {color: #2e7d32;}\np {line-height: 1.5;}\n.summary {background-color: #e9f7ea; padding: 15px; border-radius: 8px; margin-bottom: 20px;}\n.disclaimer {font-size: 0.95em; color: #555; margin: 20px 0;}\n.urgency {font-weight: bold; color: #cc7a00;}\n.emergency {background-color: #fff3f3; border: 1px solid #e57373; color: #a94442; padding: 15px; border-radius: 8px; margin-top: 25px;}\nfooter {font-size: 0.9em; color: #444; margin-top: 30px;}\n</style>\n</head>\n<body>\n<h1>Hi {{patient_name}} 🙂</h1>\n<div class=\"summary\">\n<p>{{diagnosis_summary}}</p>\n<p class=\"urgency\">Urgency Level: {{urgency}}</p>\n</div>\n<p>{{advice}}</p>\n<p class=\"disclaimer\">⚠️ {{disclaimer}}</p>\n<footer>Stay safe — your doctor will review your case shortly 💚</footer>\n</body>\n</html>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -5712,
+        1024
+      ],
+      "id": "223aea40-4d11-4cb6-b43c-bde11353ceda",
+      "name": "Emails Composer For Normal Cases"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is your input for composing emails for doctor and patient:\n- Patient's Name: {{ $('Workflow Configuration').item.json['Full Name'] }}\n\n- Patient's Email: {{ $('Validate Input').item.json.email }}\n\n- Patient's Contact No: {{ $('Validate Input').item.json.contact }}\n\n- Urgency: {{ $('Parse Response of UD').item.json.urgency_level }}\n\n- Reason For Urgency: {{ $('Parse Response of UD').item.json.reason }}\n\n- Recommended Action: {{ $('Parse Response of UD').item.json.recommended_action }}",
+        "options": {
+          "systemMessage": "You are an AI email composer for an emergency medical alert system. \nYour task is to fill in the predefined HTML email templates for a doctor and a patient when the triage system detects a CRITICAL medical situation.\n\n⚠️ STRICT RULES\n- You MUST NOT change or restyle any HTML, CSS, or structure. \n- You MUST only replace the placeholders {{VARIABLES}} with appropriate values.\n- You MUST output a single JSON object in this exact format:\n\n{\n  \"doctor's email's subject\": \"\",\n  \"doctor's email's body\": \"<!DOCTYPE html>...</html>\",\n  \"patient's email's subject\": \"\",\n  \"patient's email's body\": \"<!DOCTYPE html>...</html>\"\n}\n\n---\n\n### DOCTOR EMAIL TEMPLATE\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>{{doctor_subject}}</title>\n<style>\nbody {font-family: Arial, sans-serif; background-color: #fff5f5; color: #222; padding: 24px;}\nh1 {color: #b71c1c; text-transform: uppercase;}\n.alert-box {background-color: #b71c1c; color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 1.1em;}\n.section {margin-bottom: 20px; background-color: #ffffff; border-left: 6px solid #b71c1c; padding: 15px; border-radius: 8px;}\nfooter {font-size: 0.9em; color: #444; margin-top: 30px;}\n</style>\n</head>\n<body>\n<h1>🚨 CRITICAL PATIENT ALERT</h1>\n<div class=\"alert-box\">\n<strong>Urgency Level:</strong> {{urgency_level}} <br>\n<strong>Reason:</strong> {{reason}}\n</div>\n<div class=\"section\">\n<h2>Recommended Immediate Action</h2>\n<p>{{recommended_action}}</p>\n</div>\n<div class=\"section\">\n<h2>Patient Contact Details</h2>\n<p><strong>Name:</strong> {{patient_name}} <br>\n<strong>Email:</strong> {{patient_email}} <br>\n<strong>Contact No.:</strong> {{patient_contact}}</p>\n</div>\n<footer>⚠️ This alert was automatically generated by the AI triage system. Please prioritize review and direct medical response immediately.</footer>\n</body>\n</html>\n\n---\n\n### PATIENT EMAIL TEMPLATE\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>{{patient_subject}}</title>\n<style>\nbody {font-family: Arial, sans-serif; background-color: #fff8f8; color: #1b1b1b; padding: 24px;}\nh1 {color: #d32f2f; text-transform: uppercase;}\n.alert {background-color: #d32f2f; color: white; padding: 15px; border-radius: 8px; font-size: 1.1em; margin-bottom: 20px;}\n.warning {background-color: #fff4e5; border-left: 6px solid #ffcc00; padding: 15px; border-radius: 8px; margin-bottom: 20px;}\nfooter {font-size: 0.9em; color: #555; margin-top: 30px;}\n</style>\n</head>\n<body>\n<h1>🚨 MEDICAL EMERGENCY NOTICE</h1>\n<div class=\"alert\">\n<strong>Urgency Level:</strong> {{urgency_level}} <br>\n<strong>Reason:</strong> {{reason}}\n</div>\n<div class=\"warning\">\n<p>{{recommended_action}}</p>\n</div>\n<p>If you are currently experiencing severe pain, difficulty breathing, or loss of consciousness, please call your local emergency number (e.g., 112 in Pakistan) or go to the nearest hospital immediately.</p>\n<footer>⚠️ This message was generated automatically to alert you to seek immediate help. Do NOT wait for a doctor’s email confirmation.</footer>\n</body>\n</html>\n\n---\n\n### INSTRUCTIONS\n- Replace {{patient_name}}, {{patient_email}}, {{patient_contact}}, {{urgency_level}}, {{reason}}, and {{recommended_action}} dynamically.\n- Use a serious, professional, but concise tone.\n- DO NOT insert emojis other than the 🚨 in headings.\n- Keep all CSS and structure identical.\n\nExample of Output:\n\n{\n  \"doctor's email's subject\": \"🚨 URGENT: Possible Cardiac Distress - Immediate Review Required\",\n  \"doctor's email's body\": \"<!DOCTYPE html>... (HTML from template filled) ...\",\n  \"patient's email's subject\": \"⚠️ Emergency Medical Alert — Please Seek Immediate Help\",\n  \"patient's email's body\": \"<!DOCTYPE html>... (HTML from template filled) ...\"\n}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -6512,
+        -624
+      ],
+      "id": "21f14b5a-31df-476e-9ed7-05f554926883",
+      "name": "Emails Composer For Critical Cases"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0375ab71-8abb-46d2-b262-4081dce7996d",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -5600,
+        -480
+      ],
+      "id": "cb2f594f-33ba-4bc7-95e7-c996eade3853",
+      "name": "Branching Based On Case Reviewed Or Not"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sendpk.com/api/sms.php?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "923137108490-b383933c-cedc-4f5d-8d3b-3819b4992373"
+            },
+            {
+              "name": "sender",
+              "value": "BrandName"
+            },
+            {
+              "name": "mobile",
+              "value": "={{ $('Workflow Configuration').item.json.doctorContact }}"
+            },
+            {
+              "name": "message",
+              "value": "{}"
+            },
+            {
+              "name": "template_id",
+              "value": "10154"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -5232,
+        -352
+      ],
+      "id": "0f856e6e-3347-4744-a948-09c766f91bc7",
+      "name": "Sending Reminder Using SMS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0375ab71-8abb-46d2-b262-4081dce7996d",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -4800,
+        -352
+      ],
+      "id": "82163de8-26f7-4e49-a740-9b7cd32bc371",
+      "name": "Branching Based On Case Reviewed Or Not1"
+    },
+    {
+      "parameters": {
+        "content": "## Branch for Handling Critical Patients\n- This branch is dedicated to managing patients whose reported symptoms are classified as critical.\n- Upon detection, the system immediately issues an emergency alert to the assigned doctor,  urging prompt medical action. Simultaneously, \n   both an email and SMS are sent to the patient, clearly informing them that their symptoms may indicate a life-threatening condition. They \nare strongly advised not to wait for the doctor’s diagnosis and to seek emergency assistance immediately by visiting the nearest hospital \nor calling the emergency helpline.\n- The email sent to the doctor includes a confirmation button indicating that the case has been reviewed and is being actively managed. \nIf the doctor does not acknowledge the alert within the designated time frame, the system automatically sends a reminder via SMS and \nfollow-up email, prompting immediate attention.\n- Should the doctor still fail to respond, the case is escalated — the hospital administrator and an alternate doctor are notified, and the case \nstatus is updated to “Escalated.”",
+        "height": 976,
+        "width": 3088,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7264,
+        -928
+      ],
+      "id": "1b1e0985-2f2a-4a79-93dd-421458c07bff",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Workflow Configuration').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Workflow Configuration').first().json.sheetName }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Workflow Configuration').item.json.submittedAt }}",
+            "Name": "={{ $('Workflow Configuration').item.json['Full Name'] }}",
+            "Age": "={{ $('Workflow Configuration').item.json.Age }}",
+            "Gender": "={{ $('Workflow Configuration').item.json.Gender }}",
+            "Contact": "={{ $('Workflow Configuration').item.json['Contact No.'] }}",
+            "Symptoms": "={{ $('Workflow Configuration').item.json.Symptoms }}",
+            "Duration": "={{ $('Workflow Configuration').item.json['Duration of Symptoms'] }}",
+            "Conditions": "={{ $('Workflow Configuration').item.json['Known Conditions or Medications'] }}",
+            "Email": "={{ $('Workflow Configuration').item.json['Your Email Address'] }}",
+            "Urgency": "={{ $('Parse Response of UD').item.json.urgency_level }}",
+            "Advice": "={{ $('Parse Response of UD').item.json.recommended_action }}",
+            "AI Diagnosis": "Due to potential life threatening situation, medical professional's attention is urgently needed.",
+            "Reviewed?": "Yes"
+          },
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Age",
+              "displayName": "Age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact",
+              "displayName": "Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Symptoms",
+              "displayName": "Symptoms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Conditions",
+              "displayName": "Conditions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Diagnosis",
+              "displayName": "AI Diagnosis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Advice",
+              "displayName": "Advice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewed?",
+              "displayName": "Reviewed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4560,
+        -528
+      ],
+      "id": "0f98f796-f330-412d-81e9-5c96a958ea7a",
+      "name": "Logging Record of Reviewed Cases - 2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8xuhwqM0MhwNqHXz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Workflow Configuration').first().json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Workflow Configuration').first().json.sheetName }}",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Workflow Configuration').item.json.submittedAt }}",
+            "Name": "={{ $('Workflow Configuration').item.json['Full Name'] }}",
+            "Age": "={{ $('Workflow Configuration').item.json.Age }}",
+            "Gender": "={{ $('Workflow Configuration').item.json.Gender }}",
+            "Contact": "={{ $('Workflow Configuration').item.json['Contact No.'] }}",
+            "Symptoms": "={{ $('Workflow Configuration').item.json.Symptoms }}",
+            "Duration": "={{ $('Workflow Configuration').item.json['Duration of Symptoms'] }}",
+            "Conditions": "={{ $('Workflow Configuration').item.json['Known Conditions or Medications'] }}",
+            "Email": "={{ $('Workflow Configuration').item.json['Your Email Address'] }}",
+            "Urgency": "={{ $('Parse Response of UD').item.json.urgency_level }}",
+            "Advice": "={{ $('Parse Response of UD').item.json.recommended_action }}",
+            "AI Diagnosis": "Due to potential life threatening situation, medical professional's attention is urgently needed.",
+            "Reviewed?": "Yes"
+          },
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Age",
+              "displayName": "Age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact",
+              "displayName": "Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Symptoms",
+              "displayName": "Symptoms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Conditions",
+              "displayName": "Conditions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Diagnosis",
+              "displayName": "AI Diagnosis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Advice",
+              "displayName": "Advice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewed?",
+              "displayName": "Reviewed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -5248,
+        -624
+      ],
+      "id": "a8631971-2b06-4c44-aa4b-43e5783786ab",
+      "name": "Logging Record of Reviewed Cases - 1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8xuhwqM0MhwNqHXz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1SfWowGDLMQmmKulediMI_-vrvVOKJYrDr-zAVKw42ak",
+          "mode": "list",
+          "cachedResultName": "Medical Cases",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SfWowGDLMQmmKulediMI_-vrvVOKJYrDr-zAVKw42ak/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Medical Cases",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1SfWowGDLMQmmKulediMI_-vrvVOKJYrDr-zAVKw42ak/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Validate Input').item.json.submittedAt }}",
+            "Reviewed?": "Escalated",
+            "Name": "={{ $('Validate Input').item.json.name }}",
+            "Age": "={{ $('Validate Input').item.json.age }}",
+            "Gender": "={{ $('Validate Input').item.json.gender }}",
+            "Contact": "={{ $('Validate Input').item.json.contact }}",
+            "Symptoms": "={{ $('Validate Input').item.json.symptoms }}",
+            "Duration": "={{ $('Validate Input').item.json.duration }}",
+            "Conditions": "={{ $('Validate Input').item.json.conditions }}",
+            "Email": "={{ $('Validate Input').item.json.email }}",
+            "Urgency": "={{ $('Parse Response of UD').item.json.urgency_level }}",
+            "Advice": "={{ $('Parse Response of UD').item.json.recommended_action }}",
+            "AI Diagnosis": "⚠️ Case flagged as Critical. No AI diagnosis provided — immediate medical attention required."
+          },
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Age",
+              "displayName": "Age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact",
+              "displayName": "Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Symptoms",
+              "displayName": "Symptoms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Conditions",
+              "displayName": "Conditions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Diagnosis",
+              "displayName": "AI Diagnosis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Advice",
+              "displayName": "Advice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Reviewed?",
+              "displayName": "Reviewed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -4352,
+        -144
+      ],
+      "id": "bd38206d-a6c5-4d59-8317-c8a19a2a859b",
+      "name": "Logging Record of Reviewed Cases - 3",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8xuhwqM0MhwNqHXz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Workflow Configuration').first().json.spreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Workflow Configuration').first().json.sheetName }}"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Timestamp": "={{ $('Validate Input').item.json.submittedAt }}",
+            "Name": "={{ $('Validate Input').item.json.name }}",
+            "Age": "={{ $('Validate Input').item.json.age }}",
+            "Gender": "={{ $('Validate Input').item.json.gender }}",
+            "Symptoms": "={{ $('Validate Input').item.json.symptoms }}",
+            "Duration": "={{ $('Validate Input').item.json.duration }}",
+            "Conditions": "={{ $('Validate Input').item.json.conditions }}",
+            "Email": "={{ $('Validate Input').item.json.email }}",
+            "AI Diagnosis": "={{ $json.output }}",
+            "Urgency": "={{ $('Parse Response of Diagnostician').item.json.urgency }}",
+            "Advice": "={{ $('Parse Response of Diagnostician').item.json.advice }}",
+            "Contact": "={{ $('Validate Input').item.json.contact }}"
+          },
+          "matchingColumns": [
+            "Timestamp"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Age",
+              "displayName": "Age",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Gender",
+              "displayName": "Gender",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Contact",
+              "displayName": "Contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Symptoms",
+              "displayName": "Symptoms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Conditions",
+              "displayName": "Conditions",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI Diagnosis",
+              "displayName": "AI Diagnosis",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Urgency",
+              "displayName": "Urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Advice",
+              "displayName": "Advice",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "22b7352e-b8fe-4c48-8777-48664d22c753",
+      "name": "Logging Record of Reviewed Cases - 4",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -5360,
+        640
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "8xuhwqM0MhwNqHXz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "farooqsaleem2208@gmail.com",
+        "subject": "🚨 Escalation Notice: Critical Case Unattended — Immediate Attention Required",
+        "message": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Critical Case Escalation</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; background-color: #fff5f5; color: #222; padding: 24px;\">\n  <h1 style=\"color: #b71c1c; text-transform: uppercase;\">🚨 Escalation Notice</h1>\n  <p style=\"font-size: 1.1em; line-height: 1.5;\">\n    A <strong>critical patient case</strong> has remained <strong>unattended</strong> despite prior reminders to the assigned doctor.\n  </p>\n\n  <div style=\"background-color: #ffffff; border-left: 6px solid #b71c1c; padding: 15px; border-radius: 8px; margin-top: 15px;\">\n    <p><strong>Patient Name:</strong> {{ $('Workflow Configuration').item.json['Full Name'] }}<br>\n    <strong>Urgency Level:</strong> {{ $('Parse Response of UD').item.json.urgency_level }}<br>\n    <strong>Reason:</strong> {{ $('Parse Response of UD').item.json.reason }}<br>\n    <strong>Reported At:</strong> {{ $json.submittedAt }}<br>\n    <strong>Assigned Doctor:</strong> {{ $('Workflow Configuration').item.json.doctorEmail }}</p>\n  </div>\n\n  <p style=\"margin-top: 20px; line-height: 1.5;\">\n    Please review this case urgently and ensure a qualified medical professional is assigned immediately.  \n    Failure to respond promptly may risk patient safety.\n  </p>\n\n  <footer style=\"font-size: 0.9em; color: #444; margin-top: 30px;\">\n    This message was automatically generated by the AI Medical Assistant workflow.<br>\n    <strong>Timestamp:</strong> {{ $now }}\n  </footer>\n</body>\n</html>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -4560,
+        -336
+      ],
+      "id": "97afc61b-06ff-48eb-b971-86076cb71706",
+      "name": "Sending Email to Admin",
+      "webhookId": "4c14a7a7-d4dc-4af9-a418-42e378fc02d5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bX38WHV9EnpRlQmf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "hussain04112020@gmail.com",
+        "subject": "🚨 Escalation Notice: Critical Case Unattended — Immediate Attention Required",
+        "message": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n<title>Critical Case Escalation</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; background-color: #fff8f8; color: #1b1b1b; padding: 24px;\">\n  <h1 style=\"color: #d32f2f; text-transform: uppercase;\">⚠️ Critical Case Escalated</h1>\n\n  <p style=\"font-size: 1.1em; line-height: 1.5;\">\n    This patient case has been <strong>escalated to you</strong> after the assigned doctor did not respond within the critical time window.\n  </p>\n\n  <div style=\"background-color: #ffffff; border-left: 6px solid #d32f2f; padding: 15px; border-radius: 8px; margin-top: 15px;\">\n    <p><strong>Patient Name:</strong> {{ $('Workflow Configuration').item.json['Full Name'] }}<br>\n    <strong>Urgency Level:</strong> {{ $('Parse Response of UD').item.json.urgency_level }}<br>\n    <strong>Reason:</strong> {{ $('Parse Response of UD').item.json.reason }}<br>\n    <strong>Recommended Action:</strong> {{ $('Parse Response of UD').item.json.recommended_action }}<br>\n    <strong>Reported At:</strong> {{ $json.submittedAt }}</p>\n  </div>\n\n  <p style=\"margin-top: 20px; line-height: 1.5;\">\n    Please review this case immediately and initiate appropriate medical response or contact the patient directly if needed.  \n    Your timely action is critical.\n  </p>\n\n  <footer style=\"font-size: 0.9em; color: #555; margin-top: 30px;\">\n    Automated escalation by AI Medical Assistant System.<br>\n    <strong>Timestamp:</strong> {{ $now }}\n  </footer>\n</body>\n</html>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -4560,
+        -144
+      ],
+      "id": "ad766e3d-3a34-4de7-980a-5f37c65d0d63",
+      "name": "Sending Email to Alternate Doctor",
+      "webhookId": "4c14a7a7-d4dc-4af9-a418-42e378fc02d5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bX38WHV9EnpRlQmf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "={{ $('Workflow Configuration').item.json.doctorEmail }}",
+        "subject": "=⚠️ Urgent Reminder: Critical Patient Case Still Unreviewed",
+        "message": "={{ $('Code in JavaScript3').item.json['doctor\\'s email\\'s body'] }}",
+        "approvalOptions": {
+          "values": {
+            "approveLabel": "I Have Reviewed This Case"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeUnit": "minutes"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -5024,
+        -352
+      ],
+      "id": "ff667832-296c-4f73-a263-a7bcf919470d",
+      "name": "Reminder Email For Designated Doctor",
+      "webhookId": "4900a230-50ff-4ee6-951a-a8b557113483",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bX38WHV9EnpRlQmf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "={{ $('Workflow Configuration').item.json.doctorEmail }}",
+        "subject": "={{ $json['doctor\\'s email\\'s subject'] }}",
+        "message": "={{ $json['doctor\\'s email\\'s body'] }}",
+        "approvalOptions": {
+          "values": {
+            "approveLabel": "I Have Reviewed This Case"
+          }
+        },
+        "options": {
+          "limitWaitTime": {
+            "values": {
+              "resumeAmount": 2,
+              "resumeUnit": "minutes"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -5856,
+        -480
+      ],
+      "id": "ac41f7f0-38df-4cf3-8a69-51a4e66e6ea3",
+      "name": "Sending Urgent Alert To Designated Doctor",
+      "webhookId": "4900a230-50ff-4ee6-951a-a8b557113483",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bX38WHV9EnpRlQmf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Workflow Configuration').item.json['Your Email Address'] }}",
+        "subject": "={{ $json['patient\\'s email\\'s subject'] }}",
+        "message": "={{ $json['patient\\'s email\\'s body'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -5872,
+        -800
+      ],
+      "id": "5015b638-18e7-40bd-97c7-6454a86a5f70",
+      "name": "Sending Urgent Email to Patient",
+      "webhookId": "0e0598a9-1d06-4b80-b9c5-b588c1b2ed6b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "bX38WHV9EnpRlQmf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sendpk.com/api/sms.php?",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "api_key",
+              "value": "923137108490-b383933c-cedc-4f5d-8d3b-3819b4992373"
+            },
+            {
+              "name": "sender",
+              "value": "BrandName"
+            },
+            {
+              "name": "mobile",
+              "value": "={{ $('Workflow Configuration').item.json['Contact No.'] }}"
+            },
+            {
+              "name": "message",
+              "value": "{}"
+            },
+            {
+              "name": "template_id",
+              "value": "10156"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -5616,
+        -800
+      ],
+      "id": "d0e27114-03f0-4e3f-9fe1-4e511b7922b3",
+      "name": "Sending SMS Alert To Patient"
+    },
+    {
+      "parameters": {
+        "content": "## Branch For Handling Non-Critical Patients\n- This branch manages cases identified as having moderate or mild urgency.\n- Upon receiving a submission, the system sends a preliminary diagnosis email to the patient, \nproviding an AI-generated assessment for informational purposes before a doctor’s formal review. \nSimultaneously, an email is sent to the doctor containing the patient’s complete details along with \nthe AI’s diagnostic summary, reasoning, and recommended next steps.\n- Finally, all case information — including the patient’s data, AI-generated findings, and \nrecommendations — is recorded in a Google Sheet, serving as the central database for ongoing \nreview and reference.",
+        "height": 784,
+        "width": 3104
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7264,
+        576
+      ],
+      "id": "2b98fd5c-0573-4f47-af66-1d87bf4fb51e",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Branch for Patient Classification (Critical vs. Non-Critical)\n- This branch evaluates the AI-generated urgency level to decide how a patient’s case should be\nhandled. \n- If marked Critical, the case is routed to the Critical Patient Handling Branch for immediate alerts \nand escalation.\n- If marked non-critical, it proceeds to the Non-Critical Patient Handling Branch for standard \nprocessing and logging.",
+        "height": 432,
+        "width": 3104,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -7264,
+        96
+      ],
+      "id": "35fd734c-768b-4e03-b6f6-30e73ecb0f76",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {
+    "Patient Symptom Form": [
+      {
+        "json": {
+          "Full Name": "Naila Rafiq",
+          "Age": 67,
+          "Gender": "Female",
+          "Symptoms": "Slurred speech, drooping on the left side of her face, and weakness in her right arm. Complaining of sudden severe headache and vision problems.",
+          "Duration of Symptoms": "25 minutes",
+          "Known Conditions or Medications": "Daibetes, hypertension",
+          "Your Email Address": "pmaf16e018@outlook.com",
+          "Contact No.": "+923137108490",
+          "submittedAt": "2025-11-02T23:15:54.890+05:00",
+          "formMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Patient Symptom Form": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Urgency Determination",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email to Doctor": {
+      "main": [
+        []
+      ]
+    },
+    "Send Email to Patient": {
+      "main": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Diagnostician",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Emails Composer For Normal Cases",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Diagnostician": {
+      "main": [
+        [
+          {
+            "node": "Parse Response of Diagnostician",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Summary of Diagnoses",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Urgency Determination",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Emails Composer For Critical Cases",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Sending Urgent Email to Patient",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sending Urgent Alert To Designated Doctor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Urgency Determination": {
+      "main": [
+        [
+          {
+            "node": "Parse Response of UD",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response of UD": {
+      "main": [
+        [
+          {
+            "node": "Branching Based on Urgency",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Branching Based on Urgency": {
+      "main": [
+        [
+          {
+            "node": "Emails Composer For Critical Cases",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Diagnostician",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response of Diagnostician": {
+      "main": [
+        [
+          {
+            "node": "Summary of Diagnoses",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Emails Composer For Normal Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary of Diagnoses": {
+      "main": [
+        [
+          {
+            "node": "Logging Record of Reviewed Cases - 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Response of Email Composer": {
+      "main": [
+        [
+          {
+            "node": "Send Email to Doctor",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Email to Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emails Composer For Normal Cases": {
+      "main": [
+        [
+          {
+            "node": "Parse Response of Email Composer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emails Composer For Critical Cases": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Branching Based On Case Reviewed Or Not": {
+      "main": [
+        [
+          {
+            "node": "Logging Record of Reviewed Cases - 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sending Reminder Using SMS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sending Reminder Using SMS": {
+      "main": [
+        [
+          {
+            "node": "Reminder Email For Designated Doctor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Branching Based On Case Reviewed Or Not1": {
+      "main": [
+        [
+          {
+            "node": "Logging Record of Reviewed Cases - 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sending Email to Admin",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sending Email to Alternate Doctor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logging Record of Reviewed Cases - 2": {
+      "main": [
+        []
+      ]
+    },
+    "Logging Record of Reviewed Cases - 1": {
+      "main": [
+        []
+      ]
+    },
+    "Logging Record of Reviewed Cases - 4": {
+      "main": [
+        []
+      ]
+    },
+    "Sending Email to Alternate Doctor": {
+      "main": [
+        [
+          {
+            "node": "Logging Record of Reviewed Cases - 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reminder Email For Designated Doctor": {
+      "main": [
+        [
+          {
+            "node": "Branching Based On Case Reviewed Or Not1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sending Urgent Alert To Designated Doctor": {
+      "main": [
+        [
+          {
+            "node": "Branching Based On Case Reviewed Or Not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sending Urgent Email to Patient": {
+      "main": [
+        [
+          {
+            "node": "Sending SMS Alert To Patient",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3c1e4e18-eff0-42c1-ab85-6a6e5b544959",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "be781c31b3d8dc12e359a0aed5531e53859edbdd7ee9845d362cf4f4331594f8"
+  },
+  "id": "6fvfsSfiki5zf2Mg",
+  "tags": []
+}
