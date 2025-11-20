@@ -164,15 +164,11 @@ Although n8n stores credentials separately, the repo should define which variabl
 root/
 │  README.md
 │
-├── assets/
-│     └── diagrams/
-│
 ├── workflows/
-│     ├── main-workflow.json     (optional, not included here)
-│     └── sub-workflow.json      (optional)
+│     ├── main-workflow.json     
+│     └── sub-workflow.json      
 │
-└── docs/
-      └── (optional future expansion)
+
 ```
 
 ---
