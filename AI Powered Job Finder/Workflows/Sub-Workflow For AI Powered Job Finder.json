@@ -1,0 +1,1655 @@
+{
+  "name": "Sub-Workflow For AI Powered Job Finder",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        -128
+      ],
+      "id": "6eaf7d1f-8d81-4cd4-a697-7219d2718013",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You're an AI assistant that scores how well a job matches a candidate. Rate from 1 to 5 based on skill, experience, and fit.\nRespond with:\n{\"score\": \"\"}",
+              "role": "system"
+            },
+            {
+              "content": "=Job: {{ $json.message.content.description }}\nCandidate resume:\n\nName: {{ $('Processes Job Search Queries One by One').item.json.Name }}\nEmail: {{ $('Processes Job Search Queries One by One').item.json.Email }}\nPhone: {{ $('Processes Job Search Queries One by One').item.json.Phone }}\n\nEDUCATION\n{{ $('Processes Job Search Queries One by One').item.json['Education Level'] }}\n\nYears of EXPERIENCE\n{{ $('Processes Job Search Queries One by One').item.json['Years of Experience'] }}\n\nSKILLS\n{{ $('Processes Job Search Queries One by One').item.json['Key Skills'] }}\n\nCERTIFICATIONS\n{{ $('Processes Job Search Queries One by One').item.json.Certifications }}\n\n[End of Resume]"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "name": "Score Job",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        336,
+        1040
+      ],
+      "id": "cc640e0a-e3a2-48a2-b95d-a51b90e86580",
+      "credentials": {
+        "openAiApi": {
+          "id": "wBSkG6IGhYmCw18p",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=jobs",
+        "options": {}
+      },
+      "name": "Split Jobs1",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        1040
+      ],
+      "id": "e6aaef8d-7673-4774-8528-0d2e9f909e09"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You're an AI that extracts key job info from the following JSON and returns it like this:\n{\"company_name\": \"\",\"location\": \"\",\"description\": \"(short summary max 200 chars)\"}",
+              "role": "system"
+            },
+            {
+              "content": "=Job data:\n{{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "name": "Summarize Job1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        0,
+        1040
+      ],
+      "id": "eefe4a03-66dc-4158-8ba4-f631b389b383",
+      "credentials": {
+        "openAiApi": {
+          "id": "wBSkG6IGhYmCw18p",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -208,
+        1648
+      ],
+      "id": "6fe7e8e3-64e8-4cf7-9c91-a22797146222",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "wBSkG6IGhYmCw18p",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://remotive.com/api/remote-jobs?search={{ encodeURIComponent($json[\"Job Title\"]) }}&limit=5",
+        "options": {}
+      },
+      "name": "Get Jobs from Remotive.com",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        368,
+        368
+      ],
+      "id": "e2527c78-01ab-41d7-8b19-9d17eea03034"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        608,
+        16
+      ],
+      "id": "4a45f074-6b70-4e3f-81da-7b209436be06",
+      "name": "Triggers on Main Workflow Command"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo",
+          "mode": "list",
+          "cachedResultName": "Job Search Inputs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        848,
+        16
+      ],
+      "id": "a2e1351c-682d-4182-a2b8-ed0e0dbce825",
+      "name": "Fetches All Job Search Queries",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8208ae0a-a00e-45b6-9d64-0a3a4c49dc83",
+              "leftValue": "={{ $json['Completed?'] }}",
+              "rightValue": "NO",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        16
+      ],
+      "id": "264d34e8-529f-47ad-816e-6c121bf380aa",
+      "name": "Monitors for New Job Search Queries"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        368
+      ],
+      "id": "f811aebc-b9c9-43d2-b646-3272c823e0f1",
+      "name": "Processes Job Search Queries One by One"
+    },
+    {
+      "parameters": {
+        "amount": 35
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        368
+      ],
+      "id": "f923db1d-1f3c-4ce0-ad9a-026a6ba00973",
+      "name": "Safeguards API from Abuse",
+      "webhookId": "e2a86ee4-1c97-4c01-88a3-edfeadd30c1c"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo",
+          "mode": "list",
+          "cachedResultName": "Job Search Inputs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Completed?": "YES",
+            "Name": "={{ $('Processes Job Search Queries One by One').item.json.Name }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Education Level",
+              "displayName": "Education Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Years of Experience",
+              "displayName": "Years of Experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Skills",
+              "displayName": "Key Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certifications",
+              "displayName": "Certifications",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Completed?",
+              "displayName": "Completed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        688,
+        368
+      ],
+      "id": "4e891fc7-92f2-4f83-971a-76173f5696d9",
+      "name": "Flags Attended Job Search Queries",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg",
+          "mode": "list",
+          "cachedResultName": "Job Search",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Role ": "={{ $('Split Jobs1').item.json.title }}",
+            "Job Description": "={{ $('Summarize Job1').item.json.message.content.description }}",
+            "Company Name": "={{ $('Summarize Job1').item.json.message.content.company_name }}",
+            "Location ": "={{ $('Summarize Job1').item.json.message.content.location }}",
+            "Score": "={{ $('Score Job').item.json.message.content.score }}",
+            "Apply At": "={{ $('Split Jobs1').item.json.url }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Job Role ",
+              "displayName": "Job Role ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Location ",
+              "displayName": "Location ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Apply At",
+              "displayName": "Apply At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        688,
+        1040
+      ],
+      "id": "6f16a901-fc25-41b3-a1b3-cf27507af92e",
+      "name": "Records Job & AI Fit Scores (1-5) in Sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg",
+          "mode": "list",
+          "cachedResultName": "Job Search",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        912,
+        1040
+      ],
+      "id": "256ceb50-24ec-439c-af31-3bb7ab5dec67",
+      "name": "Fetches Job & AI Fit Scores (1-5)",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * This Function node takes all incoming items (the 5 rows from Google Sheets)\n * and combines their JSON data into a single array, which is then returned\n * as one single item. This ensures the subsequent AI Agent node runs only once\n * with the complete dataset.\n */\n\n// 1. Get all input items passed to this Function node.\n// $input.all() returns an array of all items.\nconst allInputItems = $input.all();\n\n// 2. Extract the JSON data from each item.\n// We use .map() to iterate over each item and pull out the 'json' property,\n// which contains the actual row data (e.g., { Column1: \"Value\", ... }).\nconst allRowsData = allInputItems.map(item => {\n    return item.json;\n});\n\n// 3. Create a single output item containing the combined data array.\n// We wrap the data in a new JSON property (e.g., 'sheetData') inside the 'json' object.\n// The Function node must return an array of objects, where each object is an item.\nreturn [{\n    json: {\n        sheetData: allRowsData\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        1040
+      ],
+      "id": "db92ec72-bf5f-4b1b-aeb4-14ea081045e5",
+      "name": "Aggregate Job List"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the detail of jobs:\n\nDetails of Job 1: \n- Job Role: {{ $json.sheetData[0]['Job Role '] }}\n- Job Description: {{ $json.sheetData[0]['Job Description'] }}\n- Company Name: {{ $json.sheetData[0]['Company Name'] }}\n- Location: {{ $json.sheetData[0]['Location '] }}\n- Score: {{ $json.sheetData[0].Score }}\n- Apply At: {{ $json.sheetData[0]['Apply At'] }}\n\nDetails of Job 2: \n- Job Role: {{ $json.sheetData[1]['Job Role '] }}\n- Job Description: {{ $json.sheetData[1]['Job Description'] }}\n- Company Name: {{ $json.sheetData[1]['Company Name'] }}\n- Location: {{ $json.sheetData[1]['Location '] }}\n- Score: {{ $json.sheetData[1].Score }}\n- Apply At: {{ $json.sheetData[1]['Apply At'] }}\n\nDetails of Job 3: \n- Job Role: {{ $json.sheetData[2]['Job Role '] }}\n- Job Description: {{ $json.sheetData[2]['Job Description'] }}\n- Company Name: {{ $json.sheetData[2]['Company Name'] }}\n- Location: {{ $json.sheetData[2]['Location '] }}\n- Score: {{ $json.sheetData[2].Score }}\n- Apply At: {{ $json.sheetData[2]['Apply At'] }}\n\nDetails of Job 4: \n- Job Role: {{ $json.sheetData[3]['Job Role '] }}\n- Job Description: {{ $json.sheetData[3]['Job Description'] }}\n- Company Name: {{ $json.sheetData[3]['Company Name'] }}\n- Location: {{ $json.sheetData[3]['Location '] }}\n- Score: {{ $json.sheetData[3].Score }}\n- Apply At: {{ $json.sheetData[3]['Apply At'] }}\n\nDetails of Job 5: \n- Job Role: {{ $json.sheetData[4]['Job Role '] }}\n- Job Description: {{ $json.sheetData[4]['Job Description'] }}\n- Company Name: {{ $json.sheetData[4]['Company Name'] }}\n- Location: {{ $json.sheetData[4]['Location '] }}\n- Score: {{ $json.sheetData[4].Score }}\n- Apply At: {{ $json.sheetData[4]['Apply At'] }}\n\nDetails of Job 6: \n- Job Role: {{ $json.sheetData[5]['Job Role '] }}\n- Job Description: {{ $json.sheetData[5]['Job Description'] }}\n- Company Name: {{ $json.sheetData[5]['Company Name'] }}\n- Location: {{ $json.sheetData[5]['Location '] }}\n- Score: {{ $json.sheetData[5].Score }}\n- Apply At: {{ $json.sheetData[5]['Apply At'] }}\n\nDetails of Job 7: \n- Job Role: {{ $json.sheetData[6]['Job Role '] }}\n- Job Description: {{ $json.sheetData[6]['Job Description'] }}\n- Company Name: {{ $json.sheetData[6]['Company Name'] }}\n- Location: {{ $json.sheetData[6]['Location '] }}\n- Score: {{ $json.sheetData[6].Score }}\n- Apply At: {{ $json.sheetData[6]['Apply At'] }}\n\nDetails of Job 8: \n- Job Role: {{ $json.sheetData[7]['Job Role '] }}\n- Job Description: {{ $json.sheetData[7]['Job Description'] }}\n- Company Name: {{ $json.sheetData[7]['Company Name'] }}\n- Location: {{ $json.sheetData[7]['Location '] }}\n- Score: {{ $json.sheetData[7].Score }}\n- Apply At: {{ $json.sheetData[7]['Apply At'] }}\n\nDetails of Job 9: \n- Job Role: {{ $json.sheetData[8]['Job Role '] }}\n- Job Description: {{ $json.sheetData[8]['Job Description'] }}\n- Company Name: {{ $json.sheetData[8]['Company Name'] }}\n- Location: {{ $json.sheetData[8]['Location '] }}\n- Score: {{ $json.sheetData[8].Score }}\n- Apply At: {{ $json.sheetData[8]['Apply At'] }}\n\nDetails of Job 10: \n- Job Role: {{ $json.sheetData[9]['Job Role '] }}\n- Job Description: {{ $json.sheetData[9]['Job Description'] }}\n- Company Name: {{ $json.sheetData[9]['Company Name'] }}\n- Location: {{ $json.sheetData[9]['Location '] }}\n- Score: {{ $json.sheetData[9].Score }}\n- Apply At: {{ $json.sheetData[9]['Apply At'] }}",
+        "options": {
+          "systemMessage": "You are an AI email composer for a Job Recommendation System.\nYour task is to fill a predefined HTML email template used for sending a daily personalized job digest to a user.\n\n⚠️ STRICT RULES\n- You MUST NOT change, remove, or restyle any HTML, CSS, or table structure.\n- You MUST only replace the placeholders {{VARIABLES}} with the correct values. \n- MANDATORY OVERRIDE: The Job Description content MUST be displayed in its ENTIRETY, regardless of length. Do not truncate the text or include \"Read More\" links for this field.\n- You MUST assign the right green shade as the **background color of the entire Score cell** based on the following scale, and ensure the **text color is readable** (e.g., white or another high-contrast color):\n\n  Score 5 → #006400  \n  Score 4 → #228B22  \n  Score 3 → #32CD32  \n  Score 2 → #7CFC00  \n  Score 1 → #ccffcc  \n\n- The \"Apply Now\" field MUST be rendered as a **button** with background color #007bcc, white text, padding, and border-radius as per the template.\n- You MUST output a single JSON object in this exact format:\n\n{\n  \"email_body\": \"<!DOCTYPE html>...</html>\"\n}\n\n---\n\n### JOB DIGEST EMAIL TEMPLATE\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title>{{email_subject}}</title>\n</head>\n<body style=\"margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f9f9f9; color: #333333; line-height: 1.5;\">\n  <div style=\"width: 100%; padding: 20px; box-sizing: border-box; background-color: #ffffff;\">\n\n    <p style=\"font-size: 20px; font-weight: 700; color: #222222; margin-top: 0; margin-bottom: 15px;\">\n      {{headline}}\n    </p>\n\n    <p style=\"font-size: 16px; color: #555555; margin-top: 0; margin-bottom: 25px;\">\n      {{intro_text}}\n    </p>\n\n    <table role=\"presentation\" style=\"width: 100%; border-collapse: collapse; border-spacing: 0; font-size: 14px; color: #444444;\">\n      <thead>\n        <tr>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Job Role</th>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Company Name</th>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Location</th>\n          <th style=\"text-align: center; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Score</th>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Job Description</th>\n          <th style=\"text-align: center; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Apply At</th>\n        </tr>\n      </thead>\n      <tbody>\n        {{job_rows}}\n      </tbody>\n    </table>\n\n  </div>\n</body>\n</html>\n\n---\n\n### INSTRUCTIONS\n- Replace {{headline}}, {{intro_text}}, and {{job_rows}} dynamically.\n- For each job inside {{job_rows}}:\n  - Fill all placeholders.\n  - Set the **Score cell background color** using {{score_color}} according to the scale.\n  - Ensure **Score cell text is readable** (white or high-contrast color).\n  - Display \"Apply Now\" as a button (background #007bcc, white text, padded, rounded corners) linking to {{apply_link}}.\n- Keep tone professional, concise, and helpful.\n- Do NOT add or remove table rows.\n- Do NOT add emojis or stylistic changes unless already present.\n\nExample Output:\n\n{\n  \"email_body\": \"<!DOCTYPE html>... (final HTML) ...\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -208,
+        1472
+      ],
+      "id": "9f211af4-c4ec-42af-b713-7778c0bac6b8",
+      "name": "Email Composer"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: items from previous node\n// Each item has a field: output (stringified JSON containing email_body)\n\nconst results = items.map(item => {\n    // Parse the stringified JSON in 'output'\n    let parsed;\n    try {\n        parsed = JSON.parse(item.json.output);\n    } catch (err) {\n        throw new Error(`Failed to parse JSON: ${err.message}`);\n    }\n\n    // Make sure email_body exists\n    if (!parsed.email_body) {\n        throw new Error(\"email_body field not found in parsed output\");\n    }\n\n    return {\n        json: {\n            email_body: parsed.email_body // full HTML string\n        }\n    };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        1472
+      ],
+      "id": "fba6d511-e8ac-4884-a026-78b0d78e3b4e",
+      "name": "Extracts Email Body"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Processes Job Search Queries One by One').first().json.Email }}",
+        "subject": "Job Info",
+        "message": "={{ $json.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        1472
+      ],
+      "id": "5fa47d88-24e4-4ac0-8471-41f966b19439",
+      "name": "Sends Personalized Job Digest",
+      "webhookId": "c4aa81ae-e4ee-478f-bfc4-723c40abdcdd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wZqideiofVppy4f1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg",
+          "mode": "list",
+          "cachedResultName": "Job Search",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit#gid=0"
+        },
+        "numberToDelete": 100
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        608,
+        1472
+      ],
+      "id": "233333b9-dad8-40e4-9081-644db0d83ef9",
+      "name": "Reset Job Data for Reprocessing",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Job Search API Caller\nThis part of workflow processes unattended job search queries from Google Sheets and makes API calls while respecting the API's rate limit.\n\n## Process\n\n- **Fetch Requests**: Retrieves rows from Google Sheets.\n- **Filter Unattended**: Uses IF node to catch unattended job search queries.\n- **Limit Requests**: Sends only the first item to the API call node.\n- **Throttle Requests**: Waits for 30 seconds to ensure ≤2 requests/minute.\n- **Make API Call**: Makes the actual API call.\n- **Update Status**: Updates the Google Sheet to mark the item as \"Completed\".",
+        "height": 848,
+        "width": 4192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        -208
+      ],
+      "id": "9bdc1c31-0a18-4621-904f-4dd42f853616",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Job Match Scorer\nThis part of workflow processes job data, summarizes job requirements, and scores each job based on candidate's resume.\n\n## Process\n\n- **Split Jobs Data**: Splits job data into individual jobs.\n- **Summarize Job Requirements**: Uses LLM to summarize each job's requirements.\n- **Score Job Match**: Uses LLM to compare job requirements with candidate's resume and scores (1-5).\n- **Log Scores**: Logs job information with scores in a Google Sheet.\n- **Fetch Scored Jobs**: Fetches scored job data from Google Sheet for further use.",
+        "height": 576,
+        "width": 4208,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        672
+      ],
+      "id": "1a5e6c52-f161-4d05-8db5-07a2bea36a3f",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Job Digest Emailer\n\nThis part of workflow composes and sends a job digest email to the user and resets the database.\n\n## Process\n\n- Compose Email: AI Agent composes final email in HTML.\n- Extract Email Body: Code node extracts email body from AI Agent output.\n- Send Email: Sends job digest email via Gmail node to user's email.\n- Reset Database: Deletes execution records from Google Sheet to reset database.",
+        "height": 544,
+        "width": 4208,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1120,
+        1312
+      ],
+      "id": "88130418-bf88-4158-87bb-b5664a872470",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7fcffb70-1bc9-46bd-a9c8-fdb1ce888738",
+              "leftValue": "={{ $json['Remote/On-Premises'] }}",
+              "rightValue": "on-premises",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        144
+      ],
+      "id": "525dc5ff-7275-4cc4-8bc4-f94d4d94402e",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        368
+      ],
+      "id": "6281e5f1-96a7-486b-ab67-45cff037dfb6",
+      "name": "Processes Job Search Queries One by One1"
+    },
+    {
+      "parameters": {
+        "amount": 35
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1664,
+        368
+      ],
+      "id": "f481f361-af31-493f-a5c8-0368acc5f07b",
+      "name": "Safeguards API from Abuse1",
+      "webhookId": "e2a86ee4-1c97-4c01-88a3-edfeadd30c1c"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo",
+          "mode": "list",
+          "cachedResultName": "Job Search Inputs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Completed?": "YES",
+            "Name": "={{ $('Processes Job Search Queries One by One1').item.json.Name }}"
+          },
+          "matchingColumns": [
+            "Name"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Education Level",
+              "displayName": "Education Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Years of Experience",
+              "displayName": "Years of Experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Skills",
+              "displayName": "Key Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certifications",
+              "displayName": "Certifications",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Completed?",
+              "displayName": "Completed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2576,
+        368
+      ],
+      "id": "c2f1bd3f-7e02-4baa-a4b6-b8deff09fc0b",
+      "name": "Flags Attended Job Search Queries1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.adzuna.com/v1/api/jobs/{{ $json.iso2 }}/search/1?app_id=5541659b&app_key=8a86c1c9b9841dcd00918caeae341d98&results_per_page=5&what={{ $('Processes Job Search Queries One by One1').item.json['Job Title'] }}",
+        "options": {}
+      },
+      "name": "Get Jobs from Adzuna.com",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        2240,
+        368
+      ],
+      "id": "1efa0a2c-c142-46b5-b31f-145c8ba2b0df"
+    },
+    {
+      "parameters": {
+        "jsCode": "// -------------------------------\n// ISO 3166-1 Alpha-2 Lookup Table\n// All keys are lowercase\n// -------------------------------\nconst lookup = {\n  \"afghanistan\":\"af\",\"albania\":\"al\",\"algeria\":\"dz\",\"american samoa\":\"as\",\"andorra\":\"ad\",\n  \"angola\":\"ao\",\"anguilla\":\"ai\",\"antarctica\":\"aq\",\"antigua and barbuda\":\"ag\",\n  \"argentina\":\"ar\",\"armenia\":\"am\",\"aruba\":\"aw\",\"australia\":\"au\",\"austria\":\"at\",\n  \"azerbaijan\":\"az\",\"bahamas\":\"bs\",\"bahrain\":\"bh\",\"bangladesh\":\"bd\",\"barbados\":\"bb\",\n  \"belarus\":\"by\",\"belgium\":\"be\",\"belize\":\"bz\",\"benin\":\"bj\",\"bermuda\":\"bm\",\"bhutan\":\"bt\",\n  \"bolivia\":\"bo\",\"bosnia and herzegovina\":\"ba\",\"botswana\":\"bw\",\"brazil\":\"br\",\n  \"british indian ocean territory\":\"io\",\"brunei darussalam\":\"bn\",\"bulgaria\":\"bg\",\n  \"burkina faso\":\"bf\",\"burundi\":\"bi\",\"cabo verde\":\"cv\",\"cambodia\":\"kh\",\"cameroon\":\"cm\",\n  \"canada\":\"ca\",\"cayman islands\":\"ky\",\"central african republic\":\"cf\",\"chad\":\"td\",\n  \"chile\":\"cl\",\"china\":\"cn\",\"christmas island\":\"cx\",\"cocos (keeling) islands\":\"cc\",\n  \"colombia\":\"co\",\"comoros\":\"km\",\"congo\":\"cg\",\"congo (democratic republic of the)\":\"cd\",\n  \"cook islands\":\"ck\",\"costa rica\":\"cr\",\"croatia\":\"hr\",\"cuba\":\"cu\",\"curaçao\":\"cw\",\n  \"cyprus\":\"cy\",\"czechia\":\"cz\",\"denmark\":\"dk\",\"djibouti\":\"dj\",\"dominica\":\"dm\",\n  \"dominican republic\":\"do\",\"ecuador\":\"ec\",\"egypt\":\"eg\",\"el salvador\":\"sv\",\n  \"equatorial guinea\":\"gq\",\"eritrea\":\"er\",\"estonia\":\"ee\",\"eswatini\":\"sz\",\n  \"ethiopia\":\"et\",\"falkland islands\":\"fk\",\"faroe islands\":\"fo\",\"fiji\":\"fj\",\n  \"finland\":\"fi\",\"france\":\"fr\",\"french guiana\":\"gf\",\"french polynesia\":\"pf\",\n  \"french southern territories\":\"tf\",\"gabon\":\"ga\",\"gambia\":\"gm\",\"georgia\":\"ge\",\n  \"germany\":\"de\",\"ghana\":\"gh\",\"gibraltar\":\"gi\",\"greece\":\"gr\",\"greenland\":\"gl\",\n  \"grenada\":\"gd\",\"guadeloupe\":\"gp\",\"guam\":\"gu\",\"guatemala\":\"gt\",\"guernsey\":\"gg\",\n  \"guinea\":\"gn\",\"guinea-bissau\":\"gw\",\"guyana\":\"gy\",\"haiti\":\"ht\",\"holy see\":\"va\",\n  \"honduras\":\"hn\",\"hong kong\":\"hk\",\"hungary\":\"hu\",\"iceland\":\"is\",\"india\":\"in\",\n  \"indonesia\":\"id\",\"iran\":\"ir\",\"iraq\":\"iq\",\"ireland\":\"ie\",\"isle of man\":\"im\",\n  \"israel\":\"il\",\"italy\":\"it\",\"jamaica\":\"jm\",\"japan\":\"jp\",\"jersey\":\"je\",\"jordan\":\"jo\",\n  \"kazakhstan\":\"kz\",\"kenya\":\"ke\",\"kiribati\":\"ki\",\"korea (north)\":\"kp\",\"north korea\":\"kp\",\n  \"korea (south)\":\"kr\",\"south korea\":\"kr\",\"kuwait\":\"kw\",\"kyrgyzstan\":\"kg\",\n  \"lao people's democratic republic\":\"la\",\"laos\":\"la\",\"latvia\":\"lv\",\"lebanon\":\"lb\",\n  \"lesotho\":\"ls\",\"liberia\":\"lr\",\"libya\":\"ly\",\"liechtenstein\":\"li\",\"lithuania\":\"lt\",\n  \"luxembourg\":\"lu\",\"macao\":\"mo\",\"madagascar\":\"mg\",\"malawi\":\"mw\",\"malaysia\":\"my\",\n  \"maldives\":\"mv\",\"mali\":\"ml\",\"malta\":\"mt\",\"marshall islands\":\"mh\",\"martinique\":\"mq\",\n  \"mauritania\":\"mr\",\"mauritius\":\"mu\",\"mayotte\":\"yt\",\"mexico\":\"mx\",\n  \"micronesia\":\"fm\",\"moldova\":\"md\",\"monaco\":\"mc\",\"mongolia\":\"mn\",\"montenegro\":\"me\",\n  \"montserrat\":\"ms\",\"morocco\":\"ma\",\"mozambique\":\"mz\",\"myanmar\":\"mm\",\"namibia\":\"na\",\n  \"nauru\":\"nr\",\"nepal\":\"np\",\"netherlands\":\"nl\",\"new caledonia\":\"nc\",\n  \"new zealand\":\"nz\",\"nicaragua\":\"ni\",\"niger\":\"ne\",\"nigeria\":\"ng\",\"niue\":\"nu\",\n  \"norfolk island\":\"nf\",\"north macedonia\":\"mk\",\"northern mariana islands\":\"mp\",\n  \"norway\":\"no\",\"oman\":\"om\",\"pakistan\":\"pk\",\"palau\":\"pw\",\"palestine\":\"ps\",\n  \"panama\":\"pa\",\"papua new guinea\":\"pg\",\"paraguay\":\"py\",\"peru\":\"pe\",\n  \"philippines\":\"ph\",\"pitcairn\":\"pn\",\"poland\":\"pl\",\"portugal\":\"pt\",\"puerto rico\":\"pr\",\n  \"qatar\":\"qa\",\"réunion\":\"re\",\"reunion\":\"re\",\"romania\":\"ro\",\"russian federation\":\"ru\",\n  \"russia\":\"ru\",\"rwanda\":\"rw\",\"saint barthelemy\":\"bl\",\"saint helena\":\"sh\",\n  \"saint kitts and nevis\":\"kn\",\"saint lucia\":\"lc\",\"saint martin\":\"mf\",\n  \"saint pierre and miquelon\":\"pm\",\"saint vincent and the grenadines\":\"vc\",\n  \"samoa\":\"ws\",\"san marino\":\"sm\",\"sao tome and principe\":\"st\",\"saudi arabia\":\"sa\",\n  \"senegal\":\"sn\",\"serbia\":\"rs\",\"seychelles\":\"sc\",\"sierra leone\":\"sl\",\n  \"singapore\":\"sg\",\"sint maarten\":\"sx\",\"slovakia\":\"sk\",\"slovenia\":\"si\",\n  \"solomon islands\":\"sb\",\"somalia\":\"so\",\"south africa\":\"za\",\n  \"south georgia\":\"gs\",\"south sudan\":\"ss\",\"spain\":\"es\",\"sri lanka\":\"lk\",\n  \"sudan\":\"sd\",\"suriname\":\"sr\",\"svalbard and jan mayen\":\"sj\",\"sweden\":\"se\",\n  \"switzerland\":\"ch\",\"syrian arab republic\":\"sy\",\"taiwan\":\"tw\",\"tajikistan\":\"tj\",\n  \"tanzania\":\"tz\",\"thailand\":\"th\",\"timor-leste\":\"tl\",\"togo\":\"tg\",\"tokelau\":\"tk\",\n  \"tonga\":\"to\",\"trinidad and tobago\":\"tt\",\"tunisia\":\"tn\",\"turkey\":\"tr\",\n  \"turkmenistan\":\"tm\",\"turks and caicos islands\":\"tc\",\"tuvalu\":\"tv\",\"uganda\":\"ug\",\n  \"ukraine\":\"ua\",\"united arab emirates\":\"ae\",\"united kingdom\":\"gb\",\"uk\":\"gb\",\n  \"great britain\":\"gb\",\"england\":\"gb\",\"united states\":\"us\",\"united states of america\":\"us\",\n  \"usa\":\"us\",\"u.s.a\":\"us\",\"uruguay\":\"uy\",\"uzbekistan\":\"uz\",\"vanuatu\":\"vu\",\n  \"venezuela\":\"ve\",\"viet nam\":\"vn\",\"vietnam\":\"vn\",\"virgin islands (british)\":\"vg\",\n  \"virgin islands (u.s.)\":\"vi\",\"wallis and futuna\":\"wf\",\"western sahara\":\"eh\",\n  \"yemen\":\"ye\",\"zambia\":\"zm\",\"zimbabwe\":\"zw\"\n};\n\n// ------------------\n// Normalize input\n// ------------------\nlet input = ($json.Country || \"\").toLowerCase().trim();\n\n// If empty\nif (!input) return { iso2: null };\n\n// ------------------\n// Exact match first\n// ------------------\nif (lookup[input]) {\n  return { iso2: lookup[input] };\n}\n\n// ------------------\n// Partial match (e.g., \"pak\" -> \"pakistan\")\n// ------------------\nfor (const key of Object.keys(lookup)) {\n  if (key.startsWith(input)) {\n    return { iso2: lookup[key] };\n  }\n}\n\n// ------------------\n// Fuzzy matching (simple Levenshtein distance)\n// ------------------\nfunction levenshtein(a, b) {\n  const matrix = [];\n  for (let i = 0; i <= b.length; i++) matrix[i] = [i];\n  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;\n\n  for (let i = 1; i <= b.length; i++) {\n    for (let j = 1; j <= a.length; j++) {\n      matrix[i][j] = Math.min(\n        matrix[i - 1][j] + 1,\n        matrix[i][j - 1] + 1,\n        matrix[i - 1][j - 1] + (b[i - 1] === a[j - 1] ? 0 : 1)\n      );\n    }\n  }\n  return matrix[b.length][a.length];\n}\n\nlet bestMatch = null;\nlet bestScore = 999;\n\nfor (const key of Object.keys(lookup)) {\n  const score = levenshtein(input, key);\n\n  if (score < bestScore) {\n    bestScore = score;\n    bestMatch = key;\n  }\n}\n\n// Accept fuzzy match only if reasonably close\nif (bestScore <= 3) {\n  return { iso2: lookup[bestMatch] };\n}\n\n// No match found\nreturn { iso2: null };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1952,
+        368
+      ],
+      "id": "25e29ce7-d0c8-420c-91cb-e067d56daab3",
+      "name": "Converts Country Name To ISO-3166 Code"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You're an AI assistant that scores how well a job matches a candidate. Rate from 1 to 5 based on skill, experience, and fit.\nRespond with:\n{\"score\": \"\"}",
+              "role": "system"
+            },
+            {
+              "content": "=Job: {{ $json.message.content.description }}\nCandidate resume:\n\nName: {{ $('Processes Job Search Queries One by One1').item.json.Name }}\nEmail: {{ $('Processes Job Search Queries One by One1').item.json.Email }}\nPhone: {{ $('Processes Job Search Queries One by One1').item.json.Phone }}\n\nEDUCATION\n{{ $('Processes Job Search Queries One by One1').item.json['Education Level'] }}\n\nWORK EXPERIENCE\n{{ $('Processes Job Search Queries One by One1').item.json['Years of Experience'] }}\n\nSKILLS\n{{ $('Processes Job Search Queries One by One1').item.json['Key Skills'] }}\n\nCERTIFICATIONS\n{{ $('Processes Job Search Queries One by One1').item.json.Certifications }}\n[End of Resume]"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "name": "Score Job1",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1952,
+        1040
+      ],
+      "id": "4df82840-8ee3-499b-a04c-3717d6c51d13",
+      "credentials": {
+        "openAiApi": {
+          "id": "wBSkG6IGhYmCw18p",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "name": "Split Jobs",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1408,
+        1040
+      ],
+      "id": "40b16b97-404d-4cec-aba0-c5e2afd7166c"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "You're an AI that extracts key job info from the following JSON and returns it like this:\n{\"company_name\": \"\",\"location\": \"\",\"description\": \"(short summary max 200 chars)\"}",
+              "role": "system"
+            },
+            {
+              "content": "=Job data:\n{{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "name": "Summarize Job",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1616,
+        1040
+      ],
+      "id": "5fe79143-bd0b-4b5a-9cee-0fac25a60352",
+      "credentials": {
+        "openAiApi": {
+          "id": "wBSkG6IGhYmCw18p",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg",
+          "mode": "list",
+          "cachedResultName": "Job Search",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Job Role ": "={{ $('Split Jobs').item.json.title }}",
+            "Job Description": "={{ $('Summarize Job').item.json.message.content.description }}",
+            "Company Name": "={{ $('Summarize Job').item.json.message.content.company_name }}",
+            "Location ": "={{ $('Summarize Job').item.json.message.content.location }}",
+            "Score": "={{ $('Score Job1').item.json.message.content.score }}",
+            "Apply At": "={{ $('Split Jobs').item.json.redirect_url }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Job Role ",
+              "displayName": "Job Role ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Job Description",
+              "displayName": "Job Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Company Name",
+              "displayName": "Company Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Location ",
+              "displayName": "Location ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Score",
+              "displayName": "Score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Apply At",
+              "displayName": "Apply At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2304,
+        1040
+      ],
+      "id": "9b0f4122-b28d-48ff-ba79-b2212733b0c6",
+      "name": "Records Job & AI Fit Scores (1-5) in Sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg",
+          "mode": "list",
+          "cachedResultName": "Job Search",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2528,
+        1040
+      ],
+      "id": "4bf0c23f-9544-4b58-aaad-be22d1fab632",
+      "name": "Fetches Job & AI Fit Scores (1-5)1",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * This Function node takes all incoming items (the 5 rows from Google Sheets)\n * and combines their JSON data into a single array, which is then returned\n * as one single item. This ensures the subsequent AI Agent node runs only once\n * with the complete dataset.\n */\n\n// 1. Get all input items passed to this Function node.\n// $input.all() returns an array of all items.\nconst allInputItems = $input.all();\n\n// 2. Extract the JSON data from each item.\n// We use .map() to iterate over each item and pull out the 'json' property,\n// which contains the actual row data (e.g., { Column1: \"Value\", ... }).\nconst allRowsData = allInputItems.map(item => {\n    return item.json;\n});\n\n// 3. Create a single output item containing the combined data array.\n// We wrap the data in a new JSON property (e.g., 'sheetData') inside the 'json' object.\n// The Function node must return an array of objects, where each object is an item.\nreturn [{\n    json: {\n        sheetData: allRowsData\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2752,
+        1040
+      ],
+      "id": "beee3c37-5b47-486f-b371-2ba522ecebf3",
+      "name": "Aggregate Job List1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1408,
+        1648
+      ],
+      "id": "32f8ade9-ad8a-4455-b37a-ea6727f73af4",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "wBSkG6IGhYmCw18p",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Here is the detail of jobs:\n\nDetails of Job 1: \n- Job Role: {{ $json.sheetData[0]['Job Role '] }}\n- Job Description: {{ $json.sheetData[0]['Job Description'] }}\n- Company Name: {{ $json.sheetData[0]['Company Name'] }}\n- Location: {{ $json.sheetData[0]['Location '] }}\n- Score: {{ $json.sheetData[0].Score }}\n- Apply At: {{ $json.sheetData[0]['Apply At'] }}\n\nDetails of Job 2: \n- Job Role: {{ $json.sheetData[1]['Job Role '] }}\n- Job Description: {{ $json.sheetData[1]['Job Description'] }}\n- Company Name: {{ $json.sheetData[1]['Company Name'] }}\n- Location: {{ $json.sheetData[1]['Location '] }}\n- Score: {{ $json.sheetData[1].Score }}\n- Apply At: {{ $json.sheetData[1]['Apply At'] }}\n\nDetails of Job 3: \n- Job Role: {{ $json.sheetData[2]['Job Role '] }}\n- Job Description: {{ $json.sheetData[2]['Job Description'] }}\n- Company Name: {{ $json.sheetData[2]['Company Name'] }}\n- Location: {{ $json.sheetData[2]['Location '] }}\n- Score: {{ $json.sheetData[2].Score }}\n- Apply At: {{ $json.sheetData[2]['Apply At'] }}\n\nDetails of Job 4: \n- Job Role: {{ $json.sheetData[3]['Job Role '] }}\n- Job Description: {{ $json.sheetData[3]['Job Description'] }}\n- Company Name: {{ $json.sheetData[3]['Company Name'] }}\n- Location: {{ $json.sheetData[3]['Location '] }}\n- Score: {{ $json.sheetData[3].Score }}\n- Apply At: {{ $json.sheetData[3]['Apply At'] }}\n\nDetails of Job 5: \n- Job Role: {{ $json.sheetData[4]['Job Role '] }}\n- Job Description: {{ $json.sheetData[4]['Job Description'] }}\n- Company Name: {{ $json.sheetData[4]['Company Name'] }}\n- Location: {{ $json.sheetData[4]['Location '] }}\n- Score: {{ $json.sheetData[4].Score }}\n- Apply At: {{ $json.sheetData[4]['Apply At'] }}\n\nDetails of Job 6: \n- Job Role: {{ $json.sheetData[5]['Job Role '] }}\n- Job Description: {{ $json.sheetData[5]['Job Description'] }}\n- Company Name: {{ $json.sheetData[5]['Company Name'] }}\n- Location: {{ $json.sheetData[5]['Location '] }}\n- Score: {{ $json.sheetData[5].Score }}\n- Apply At: {{ $json.sheetData[5]['Apply At'] }}\n\nDetails of Job 7: \n- Job Role: {{ $json.sheetData[6]['Job Role '] }}\n- Job Description: {{ $json.sheetData[6]['Job Description'] }}\n- Company Name: {{ $json.sheetData[6]['Company Name'] }}\n- Location: {{ $json.sheetData[6]['Location '] }}\n- Score: {{ $json.sheetData[6].Score }}\n- Apply At: {{ $json.sheetData[6]['Apply At'] }}\n\nDetails of Job 8: \n- Job Role: {{ $json.sheetData[7]['Job Role '] }}\n- Job Description: {{ $json.sheetData[7]['Job Description'] }}\n- Company Name: {{ $json.sheetData[7]['Company Name'] }}\n- Location: {{ $json.sheetData[7]['Location '] }}\n- Score: {{ $json.sheetData[7].Score }}\n- Apply At: {{ $json.sheetData[7]['Apply At'] }}\n\nDetails of Job 9: \n- Job Role: {{ $json.sheetData[8]['Job Role '] }}\n- Job Description: {{ $json.sheetData[8]['Job Description'] }}\n- Company Name: {{ $json.sheetData[8]['Company Name'] }}\n- Location: {{ $json.sheetData[8]['Location '] }}\n- Score: {{ $json.sheetData[8].Score }}\n- Apply At: {{ $json.sheetData[8]['Apply At'] }}\n\nDetails of Job 10: \n- Job Role: {{ $json.sheetData[9]['Job Role '] }}\n- Job Description: {{ $json.sheetData[9]['Job Description'] }}\n- Company Name: {{ $json.sheetData[9]['Company Name'] }}\n- Location: {{ $json.sheetData[9]['Location '] }}\n- Score: {{ $json.sheetData[9].Score }}\n- Apply At: {{ $json.sheetData[9]['Apply At'] }}",
+        "options": {
+          "systemMessage": "You are an AI email composer for a Job Recommendation System.\nYour task is to fill a predefined HTML email template used for sending a daily personalized job digest to a user.\n\n⚠️ STRICT RULES\n- You MUST NOT change, remove, or restyle any HTML, CSS, or table structure.\n- You MUST only replace the placeholders {{VARIABLES}} with the correct values. \n- MANDATORY OVERRIDE: The Job Description content MUST be displayed in its ENTIRETY, regardless of length. Do not truncate the text or include \"Read More\" links for this field.\n- You MUST assign the right green shade as the **background color of the entire Score cell** based on the following scale, and ensure the **text color is readable** (e.g., white or another high-contrast color):\n\n  Score 5 → #006400  \n  Score 4 → #228B22  \n  Score 3 → #32CD32  \n  Score 2 → #7CFC00  \n  Score 1 → #ccffcc  \n\n- The \"Apply Now\" field MUST be rendered as a **button** with background color #007bcc, white text, padding, and border-radius as per the template.\n- You MUST output a single JSON object in this exact format:\n\n{\n  \"email_body\": \"<!DOCTYPE html>...</html>\"\n}\n\n---\n\n### JOB DIGEST EMAIL TEMPLATE\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />\n<title>{{email_subject}}</title>\n</head>\n<body style=\"margin:0; padding:0; font-family: Arial, sans-serif; background-color: #f9f9f9; color: #333333; line-height: 1.5;\">\n  <div style=\"width: 100%; padding: 20px; box-sizing: border-box; background-color: #ffffff;\">\n\n    <p style=\"font-size: 20px; font-weight: 700; color: #222222; margin-top: 0; margin-bottom: 15px;\">\n      {{headline}}\n    </p>\n\n    <p style=\"font-size: 16px; color: #555555; margin-top: 0; margin-bottom: 25px;\">\n      {{intro_text}}\n    </p>\n\n    <table role=\"presentation\" style=\"width: 100%; border-collapse: collapse; border-spacing: 0; font-size: 14px; color: #444444;\">\n      <thead>\n        <tr>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Job Role</th>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Company Name</th>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Location</th>\n          <th style=\"text-align: center; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Score</th>\n          <th style=\"text-align: left; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Job Description</th>\n          <th style=\"text-align: center; padding: 12px 15px; background-color: #eaeaea; border-bottom: 2px solid #cccccc;\">Apply At</th>\n        </tr>\n      </thead>\n      <tbody>\n        {{job_rows}}\n      </tbody>\n    </table>\n\n  </div>\n</body>\n</html>\n\n---\n\n### INSTRUCTIONS\n- Replace {{headline}}, {{intro_text}}, and {{job_rows}} dynamically.\n- For each job inside {{job_rows}}:\n  - Fill all placeholders.\n  - Set the **Score cell background color** using {{score_color}} according to the scale.\n  - Ensure **Score cell text is readable** (white or high-contrast color).\n  - Display \"Apply Now\" as a button (background #007bcc, white text, padded, rounded corners) linking to {{apply_link}}.\n- Keep tone professional, concise, and helpful.\n- Do NOT add or remove table rows.\n- Do NOT add emojis or stylistic changes unless already present.\n\nExample Output:\n\n{\n  \"email_body\": \"<!DOCTYPE html>... (final HTML) ...\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        1472
+      ],
+      "id": "580b7b1f-53b0-431e-9d68-1c3ec38a1d78",
+      "name": "Email Composer1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Input: items from previous node\n// Each item has a field: output (stringified JSON containing email_body)\n\nconst results = items.map(item => {\n    // Parse the stringified JSON in 'output'\n    let parsed;\n    try {\n        parsed = JSON.parse(item.json.output);\n    } catch (err) {\n        throw new Error(`Failed to parse JSON: ${err.message}`);\n    }\n\n    // Make sure email_body exists\n    if (!parsed.email_body) {\n        throw new Error(\"email_body field not found in parsed output\");\n    }\n\n    return {\n        json: {\n            email_body: parsed.email_body // full HTML string\n        }\n    };\n});\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        1472
+      ],
+      "id": "69c65f5f-a77e-4a4a-8687-b333ddac8708",
+      "name": "Extracts Email Body1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Processes Job Search Queries One by One1').first().json.Email }}",
+        "subject": "Job Info",
+        "message": "={{ $json.email_body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1984,
+        1472
+      ],
+      "id": "8b5253d7-c1e3-44d9-a78a-a9d08bb4a838",
+      "name": "Sends Personalized Job Digest1",
+      "webhookId": "c4aa81ae-e4ee-478f-bfc4-723c40abdcdd",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wZqideiofVppy4f1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "documentId": {
+          "__rl": true,
+          "value": "1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg",
+          "mode": "list",
+          "cachedResultName": "Job Search",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rlOWLH2MAdDarobSHDwrTQHCwn1jvh2OTEu-AYe6nTg/edit#gid=0"
+        },
+        "numberToDelete": 100
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2224,
+        1472
+      ],
+      "id": "119a10ff-9075-4d19-83dd-4c4f79a993e1",
+      "name": "Reset Job Data for Reprocessing1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Triggers on Main Workflow Command": [
+      {
+        "json": {
+          "Name": "Sheikh Muhammad Saleem Shahzad",
+          "Phone": 3137108490,
+          "Email": "pmaf16e018@gmail.com",
+          "Job Title": "Data Scientist",
+          "Education Level": "Masters in Data Science",
+          "Years of Experience": "In my previous role as a Data Scientist at XYZ Corporation, a reputed organization in the industry, I was responsible for analyzing complex data sets, developing predictive models, and presenting insights to stakeholders. My key achievements include driving business growth through data-driven insights, improving model accuracy by 15%, and implementing data solutions that increased efficiency by 20%.",
+          "Key Skills": "Machine Learning, Python, Data Visualization, Statistics",
+          "Certifications": "Certified Data Scientist (CDS) by Data Science Council of America (DASCA)",
+          "Remote/On-Premises": "on-premises",
+          "Country": "United Kingdom",
+          "Completed?": "NO"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Split Jobs1": {
+      "main": [
+        [
+          {
+            "node": "Summarize Job1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Job1": {
+      "main": [
+        [
+          {
+            "node": "Score Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Job": {
+      "main": [
+        [
+          {
+            "node": "Records Job & AI Fit Scores (1-5) in Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Composer",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Jobs from Remotive.com": {
+      "main": [
+        [
+          {
+            "node": "Flags Attended Job Search Queries",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Jobs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Triggers on Main Workflow Command": {
+      "main": [
+        [
+          {
+            "node": "Fetches All Job Search Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetches All Job Search Queries": {
+      "main": [
+        [
+          {
+            "node": "Monitors for New Job Search Queries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Monitors for New Job Search Queries": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processes Job Search Queries One by One": {
+      "main": [
+        [
+          {
+            "node": "Safeguards API from Abuse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Safeguards API from Abuse": {
+      "main": [
+        [
+          {
+            "node": "Get Jobs from Remotive.com",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Records Job & AI Fit Scores (1-5) in Sheet": {
+      "main": [
+        [
+          {
+            "node": "Fetches Job & AI Fit Scores (1-5)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetches Job & AI Fit Scores (1-5)": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Job List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Job List": {
+      "main": [
+        [
+          {
+            "node": "Email Composer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Composer": {
+      "main": [
+        [
+          {
+            "node": "Extracts Email Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extracts Email Body": {
+      "main": [
+        [
+          {
+            "node": "Sends Personalized Job Digest",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sends Personalized Job Digest": {
+      "main": [
+        [
+          {
+            "node": "Reset Job Data for Reprocessing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Processes Job Search Queries One by One1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Processes Job Search Queries One by One",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Processes Job Search Queries One by One1": {
+      "main": [
+        [
+          {
+            "node": "Safeguards API from Abuse1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Safeguards API from Abuse1": {
+      "main": [
+        [
+          {
+            "node": "Converts Country Name To ISO-3166 Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Jobs from Adzuna.com": {
+      "main": [
+        [
+          {
+            "node": "Flags Attended Job Search Queries1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Converts Country Name To ISO-3166 Code": {
+      "main": [
+        [
+          {
+            "node": "Get Jobs from Adzuna.com",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Job1": {
+      "main": [
+        [
+          {
+            "node": "Records Job & AI Fit Scores (1-5) in Sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Jobs": {
+      "main": [
+        [
+          {
+            "node": "Summarize Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize Job": {
+      "main": [
+        [
+          {
+            "node": "Score Job1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Records Job & AI Fit Scores (1-5) in Sheet1": {
+      "main": [
+        [
+          {
+            "node": "Fetches Job & AI Fit Scores (1-5)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetches Job & AI Fit Scores (1-5)1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Job List1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Email Composer1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Composer1": {
+      "main": [
+        [
+          {
+            "node": "Extracts Email Body1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extracts Email Body1": {
+      "main": [
+        [
+          {
+            "node": "Sends Personalized Job Digest1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sends Personalized Job Digest1": {
+      "main": [
+        [
+          {
+            "node": "Reset Job Data for Reprocessing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Job List1": {
+      "main": [
+        [
+          {
+            "node": "Email Composer1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6a030b9e-fa1e-4fff-a0d2-87d04f4c8684",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5a314230acdd27e93184f0effca76b08b6b85a15e0ccc6ff5bc732f28f0bd900"
+  },
+  "id": "EVJhMDd6kviU0xCO",
+  "tags": []
+}

@@ -1,0 +1,1151 @@
+{
+  "name": "AI Powered Job Finder",
+  "nodes": [
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "job_title",
+              "value": "={{ $json.body.jobTitle }}"
+            }
+          ]
+        },
+        "options": {
+          "dotNotation": false
+        }
+      },
+      "name": "Set Job Title1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        2448,
+        672
+      ],
+      "id": "84bbd058-75a2-4500-aecb-38590e9e71f6"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-token",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "297c748d-f27f-4514-a6b5-11cc0aaea525",
+      "name": "Webhook - Receive Email",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        288,
+        352
+      ],
+      "webhookId": "0710f6f3-63da-4012-bb8b-f72b4a4376d5"
+    },
+    {
+      "parameters": {
+        "functionCode": "const email = $json.email;\n\n// generate 32-char token\nconst token = [...Array(32)].map(() => Math.random().toString(36)[2]).join('');\n\nreturn [{ email, token, used: 'FALSE', createdAt: new Date().toISOString() }];"
+      },
+      "id": "48c0acdc-c205-4f70-9c3c-dfc2fd6bfe40",
+      "name": "Generate Token",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9805964c-9214-47e6-9bae-5bb02bd4f00e",
+              "leftValue": "={{ $json.used }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        1280
+      ],
+      "id": "88afe88c-b3fb-435a-8910-11ab21b37946",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "EVJhMDd6kviU0xCO",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/EVJhMDd6kviU0xCO",
+          "cachedResultName": "Sub-Workflow For Job Search (Final)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "mode": "each",
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2576,
+        1536
+      ],
+      "id": "d0b8113c-cb42-4e1a-ba35-320d5f8bd87b",
+      "name": "Call 'Sub-Workflow For Job Search (Final)'"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0",
+          "mode": "list",
+          "cachedResultName": "Job Search Token Storage",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "email",
+              "lookupValue": "={{ $json.body.email }}"
+            },
+            {
+              "lookupColumn": "IP ",
+              "lookupValue": "={{ $json.headers['cf-connecting-ip'] }}"
+            }
+          ]
+        },
+        "combineFilters": "OR",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        352
+      ],
+      "id": "c52e9a7f-04ce-4cb3-914a-d1f72ab0066d",
+      "name": "Catches The Row With Same Email (if any)",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fe999357-72af-49e7-b075-6460ae7ec978",
+              "leftValue": "={{ $json.row_number }}",
+              "rightValue": "={{ $json['IP '] }}",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "202276b9-7bfe-42d5-a058-fcfc4da26b10",
+              "leftValue": "={{ $('Webhook - Receive Email').item.json.headers['cf-connecting-ip'] }}",
+              "rightValue": "={{ $json['IP '] }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        352
+      ],
+      "id": "964aef1b-b05b-4580-badf-7e2040b17d07",
+      "name": "Navigator For Token Generation Requests"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0",
+          "mode": "list",
+          "cachedResultName": "Job Search Token Storage",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "token": "={{ $json.token }}",
+            "used": "={{ $json.used }}",
+            "createdAt": "={{ $json.createdAt }}",
+            "email": "={{ $('Webhook - Receive Email').item.json.body.email }}",
+            "IP ": "={{ $('Webhook - Receive Email').item.json.headers['cf-connecting-ip'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IP ",
+              "displayName": "IP ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "used",
+              "displayName": "used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1376,
+        368
+      ],
+      "id": "d85e9ec3-317d-4f44-b25c-abbfadcc4197",
+      "name": "Information Related to Generated Tokens",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "Your Zero Manual Access Token",
+        "message": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Your Zero Manual Access Token</title>\n</head>\n<body style=\"margin: 0; padding: 0; background-color: #f9f9f9; font-family: Arial, sans-serif;\">\n\n    <!-- Email Wrapper Table -->\n    <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"table-layout: fixed;\">\n        <tr>\n            <td align=\"center\" style=\"padding: 20px 0;\">\n                <!-- Content Table -->\n                <table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"max-width: 800px; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);\">\n                    <tr>\n                        <td style=\"padding: 40px; color: #333333; line-height: 1.6;\">\n\n                            <!-- Email Header -->\n                            <h1 style=\"font-size: 24px; color: #007bff; margin-top: 0;\">Hello,</h1>\n\n                            <!-- Main Body Text -->\n                            <p style=\"margin-bottom: 20px;\">Your one-time access token is:</p>\n\n                            <!-- Token Block -->\n                            <div style=\"text-align: center; margin: 30px 0; padding: 20px; background-color: #e6f7ff; border: 1px solid #cceeff; border-radius: 6px;\">\n                                <p style=\"font-size: 28px; font-weight: bold; color: #0056b3; margin: 0;\">\n                                    {{ $json.token }}\n                                </p>\n                            </div>\n\n                            <p style=\"margin-bottom: 20px;\">\n                                You can use this token to access your selected workflow on <strong>Zero Manual</strong>.\n                            </p>\n\n                            <p style=\"margin-bottom: 20px;\">\n                                Please note that this token works <strong>only once</strong>.\n                            </p>\n\n                            <!-- Safety Message (Italic) -->\n                            <p style=\"margin-bottom: 40px; font-style: italic; color: #666666;\">\n                                If you did not request this token, you can safely ignore this email.\n                            </p>\n\n                            <!-- Closing -->\n                            <p style=\"margin: 0;\">Thanks,</p>\n                            <p style=\"margin-top: 5px;\">\n                                <strong style=\"color: #333333;\">Zero Manual Team</strong><br>\n                                <span style=\"font-size: 14px; color: #888888;\">Empowering automation for everyone</span>\n                            </p>\n                        </td>\n                    </tr>\n                </table>\n                <!-- End Content Table -->\n            </td>\n        </tr>\n    </table>\n    <!-- End Email Wrapper Table -->\n\n</body>\n</html>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1648,
+        368
+      ],
+      "id": "7877548d-583d-49f8-9a0d-e318fec20ef0",
+      "name": "Sends Token to User Via Email",
+      "webhookId": "47645ef7-0770-4a1c-9a64-7adc7e620049",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wZqideiofVppy4f1",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": true, \n   \"message\": \"Your access token has been emailed to you. Please check your inbox.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1136,
+        608
+      ],
+      "id": "d99d73e2-a7bc-4d6e-a1f9-3d523a64a402",
+      "name": "Sends \"Token Sent\" Message to UI"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"success\": false, \n   \"message\": \"You already have used your one-time access token.\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        128
+      ],
+      "id": "1a96d28e-fb9b-46eb-a004-7f053d49a2d5",
+      "name": "Sends \"Token Already Used\" Message to UI"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tokenVerification",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        608,
+        1280
+      ],
+      "id": "77460c79-a6bd-4de9-ba29-ca00f93a82e9",
+      "name": "Receives Token From User",
+      "webhookId": "11bec8e1-5fef-4ffd-ae6e-9b975202ea78"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0",
+          "mode": "list",
+          "cachedResultName": "Job Search Token Storage",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "token",
+              "lookupValue": "={{ $json.body.token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        816,
+        1280
+      ],
+      "id": "07877a2e-5211-4cce-aac6-4b1d8c9f99b4",
+      "name": "Fetches Info Related to Generated Tokens",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0",
+          "mode": "list",
+          "cachedResultName": "Job Search Token Storage",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1fXir0OabemWiHBmll7QfJSj0xcB4pQyZFCeXafTF3p0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "used": "TRUE",
+            "token": "={{ $json.token }}"
+          },
+          "matchingColumns": [
+            "token"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IP ",
+              "displayName": "IP ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "token",
+              "displayName": "token",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "used",
+              "displayName": "used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "createdAt",
+              "displayName": "createdAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1440,
+        1056
+      ],
+      "id": "4c96a357-54dd-4daa-bfc9-b1ba44fd1e80",
+      "name": "Marks Token As \"Used\" After Verification",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"valid\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1440,
+        1264
+      ],
+      "id": "31577c1e-b216-4d44-868f-f875abbeb31c",
+      "name": "Notifies Successful Token Verification"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"valid\": false\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1440,
+        1504
+      ],
+      "id": "cbc9b3e9-7cb1-4cd7-adc2-73eec98ab2ec",
+      "name": "Indicates Token Has Been Used"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "d7e74325-b7d6-436b-95ab-7130bc829a5c",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2208,
+        672
+      ],
+      "id": "e691a37e-5695-4cb4-852b-0a8aa0c623f5",
+      "name": "Gathers Job Search Information",
+      "webhookId": "d7e74325-b7d6-436b-95ab-7130bc829a5c"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo",
+          "mode": "list",
+          "cachedResultName": "Job Search Inputs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Name": "={{ $json.body.fullName }}",
+            "Phone": "={{ $json.body.phoneNumber }}",
+            "Email": "={{ $json.body.emailAddress }}",
+            "Job Title": "={{ $json.body.jobTitle }}",
+            "Education Level": "={{ $json.body.education }}",
+            "Years of Experience": "={{ $json.body.experience }}",
+            "Key Skills": "={{ $json.body.keySkills }}",
+            "Certifications": "={{ $json.body.certifications }}",
+            "Completed?": "NO",
+            "Remote/On-Premises": "={{ $json.body.jobType }}",
+            "Country": "={{ $json.body.country }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Job Title",
+              "displayName": "Job Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Education Level",
+              "displayName": "Education Level",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Years of Experience",
+              "displayName": "Years of Experience",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Key Skills",
+              "displayName": "Key Skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Certifications",
+              "displayName": "Certifications",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Remote/On-Premises",
+              "displayName": "Remote/On-Premises",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Country",
+              "displayName": "Country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Completed?",
+              "displayName": "Completed?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2688,
+        672
+      ],
+      "id": "71d15d80-599d-43c9-a650-97ae52032bcc",
+      "name": "Logs Job Search Queries in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NODWORnuHHi5v34S",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo",
+          "mode": "list",
+          "cachedResultName": "Job Search Inputs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hp5lOAYkyThINIazS5VOfcHFk4stTP7-DLhhY1r6TCo/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        1536
+      ],
+      "id": "ade38d73-aff1-4670-a1f9-c7b3da0c1bb3",
+      "name": "Scans Google Sheet for Unprocessed Job Search Queries Every Minute",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "HasY9F5Ni7aJqsr3",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## One-Time Access Token Generation\nThis workflow generates a random one-time access token for the AI Remote Job Finder.\n\n## Process\n- **Input**: User's email address\n- **Validation**: Checks if a token has already been generated for the provided email address and/or IP\n address in the Google Sheet records.\n- **If token exists**: Notifies the user that a token has already been used.\n- If token doesn't exist:\n    - Generates a random access token.\n    - Sends the token to the user's email address.\n    - Logs the token record in Google Sheet for future reference.",
+        "height": 864,
+        "width": 1888,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d18b4c39-0ece-4d8a-91d2-0f5f1bcf394c",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Token Verification Workflow\nThis workflow verifies a one-time access token for the AI Remote Job Finder.\n\nProcess\n\n- **Input**: User's token\n- **Validation**:\n    - Checks if the token exists in the Google Sheet records.\n    - If not found, notifies the user that the token is invalid.\n- **If token exists**:\n    - Checks if the token has already been used.\n    - If used, notifies the user that the token has already been used.\n- **If token is valid and unused**:\n    - Verifies the token.\n    - Updates the Google Sheet record to mark the token as USED.",
+        "height": 752,
+        "width": 1888
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        976
+      ],
+      "id": "a4c3625f-f3cf-4e27-a74c-0f45ff97904b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Information Gathering Workflow\nThis workflow collects user information for the AI Remote Job Finder.\n\n## Process\n\n- **Input**: User's information via webhook:\n    - Name\n    - Phone Number\n    - Email\n    - Job Title (desired job)\n    - Education Level\n    - Years of Experience\n    - Key Skills\n    - Certifications\n- **Logging**: Records the user's information in a Google Sheet for future reference.",
+        "height": 656,
+        "width": 1072,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        208
+      ],
+      "id": "9a30c81d-04cf-4631-9584-8561c2e7de90",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## API Request Throttler Workflow\nThis workflow is designed to prevent API usage abuse by throttling requests to a subworkflow.\n\n## Process\n\n- **Trigger**: Watches rows in a Google Sheet every 1 minute.\n- **Processing**:\n    - Retrieves the rows from the Google Sheet.\n    - Iterates over each row and calls the subworkflow with the current row's data.\n    - Waits for the subworkflow to complete its execution before proceeding to the next row.\n- **Purpose**: Ensures that the subworkflow is executed sequentially.",
+        "height": 624,
+        "width": 1088,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1984,
+        1104
+      ],
+      "id": "9810fe42-930a-4b92-9d7b-3595416037be",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {
+    "Webhook - Receive Email": [
+      {
+        "json": {
+          "headers": {
+            "host": "farooqhassnain786.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+            "content-length": "32",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2402:ad80:131:46e1:9db8:54fb:f9bd:4b1d",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "PK",
+            "cf-ray": "9a0289a9c598907a-KHI",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "https://saleemshahzad08.github.io",
+            "priority": "u=1, i",
+            "referer": "https://saleemshahzad08.github.io/",
+            "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2402:ad80:131:46e1:9db8:54fb:f9bd:4b1d, 172.69.111.204",
+            "x-forwarded-host": "farooqhassnain786.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-18-7959cfc789-rqqrl",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2402:ad80:131:46e1:9db8:54fb:f9bd:4b1d"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "email": "pmaf16e018@gmail.com"
+          },
+          "webhookUrl": "https://farooqhassnain786.app.n8n.cloud/webhook/generate-token",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Receives Token From User": [
+      {
+        "json": {
+          "headers": {
+            "host": "farooqhassnain786.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+            "content-length": "44",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2402:ad80:131:46e1:8de5:690d:ad39:4896",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "PK",
+            "cf-ray": "9a0149e303ac9a44-HKG",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "origin": "https://saleemshahzad08.github.io",
+            "priority": "u=1, i",
+            "referer": "https://saleemshahzad08.github.io/",
+            "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2402:ad80:131:46e1:8de5:690d:ad39:4896, 162.158.179.33",
+            "x-forwarded-host": "farooqhassnain786.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-18-7959cfc789-zp8xj",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2402:ad80:131:46e1:8de5:690d:ad39:4896"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "token": "yzg1ji1bbdii950mtihp8diyfpiagzlg"
+          },
+          "webhookUrl": "https://farooqhassnain786.app.n8n.cloud/webhook/tokenVerification",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Gathers Job Search Information": [
+      {
+        "json": {
+          "headers": {
+            "host": "hussainsaleem.app.n8n.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
+            "content-length": "1093",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "accept-language": "en-US,en;q=0.9",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "2402:ad80:a8:e1c6:8c6:90ef:aa29:1b7a",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "PK",
+            "cf-ray": "9a1564cf653ffe1e-SIN",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryr6RBTmz3N1FvZ22b",
+            "origin": "https://saleemshahzad08.github.io",
+            "priority": "u=1, i",
+            "referer": "https://saleemshahzad08.github.io/",
+            "sec-ch-ua": "\"Chromium\";v=\"142\", \"Google Chrome\";v=\"142\", \"Not_A Brand\";v=\"99\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "2402:ad80:a8:e1c6:8c6:90ef:aa29:1b7a, 162.158.88.157",
+            "x-forwarded-host": "hussainsaleem.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-88-6587794787-25jh4",
+            "x-is-trusted": "yes",
+            "x-real-ip": "2402:ad80:a8:e1c6:8c6:90ef:aa29:1b7a"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "fullName": "fasdf",
+            "phoneNumber": "13",
+            "emailAddress": "pmaf16e018@gmail.com",
+            "jobTitle": "Cloud DevOps Engineer",
+            "jobType": "on-premises",
+            "country": "Canada",
+            "education": "dfadc",
+            "experience": "dcADF",
+            "keySkills": "DAFVv",
+            "certifications": "DCDv"
+          },
+          "webhookUrl": "https://hussainsaleem.app.n8n.cloud/webhook/d7e74325-b7d6-436b-95ab-7130bc829a5c",
+          "executionMode": "production"
+        }
+      }
+    ],
+    "Scans Google Sheet for Unprocessed Job Search Queries Every Minute": [
+      {
+        "json": {
+          "Name": "Sheikh Muhammad Saleem Shahzad",
+          "Phone": 3137108490,
+          "Email": "pmaf16e018@gmail.com",
+          "Job Title": "AI Engineer",
+          "Education Level": "xzcC",
+          "Years of Experience": "vsdvadv",
+          "Key Skills": "sfvsDV",
+          "Certifications": "dCDdv",
+          "Remote/On-Premises": "on-premises",
+          "Country": "Pakistan",
+          "Completed?": "NO"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Set Job Title1": {
+      "main": [
+        [
+          {
+            "node": "Logs Job Search Queries in Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - Receive Email": {
+      "main": [
+        [
+          {
+            "node": "Catches The Row With Same Email (if any)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Token": {
+      "main": [
+        [
+          {
+            "node": "Information Related to Generated Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Notifies Successful Token Verification",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Marks Token As \"Used\" After Verification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Indicates Token Has Been Used",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Catches The Row With Same Email (if any)": {
+      "main": [
+        [
+          {
+            "node": "Navigator For Token Generation Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Navigator For Token Generation Requests": {
+      "main": [
+        [
+          {
+            "node": "Sends \"Token Already Used\" Message to UI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Token",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Sends \"Token Sent\" Message to UI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Related to Generated Tokens": {
+      "main": [
+        [
+          {
+            "node": "Sends Token to User Via Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receives Token From User": {
+      "main": [
+        [
+          {
+            "node": "Fetches Info Related to Generated Tokens",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetches Info Related to Generated Tokens": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gathers Job Search Information": {
+      "main": [
+        [
+          {
+            "node": "Set Job Title1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scans Google Sheet for Unprocessed Job Search Queries Every Minute": {
+      "main": [
+        [
+          {
+            "node": "Call 'Sub-Workflow For Job Search (Final)'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "9094e360-e55f-4c03-8506-25fb67746275",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5a314230acdd27e93184f0effca76b08b6b85a15e0ccc6ff5bc732f28f0bd900"
+  },
+  "id": "5xyBH0rr3T3jjAPl",
+  "tags": []
+}
